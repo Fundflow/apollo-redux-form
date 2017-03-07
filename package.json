@@ -1,0 +1,50 @@
+{
+  "name": "apollo-redux-form",
+  "version": "0.1.0",
+  "description": "redux-form powered by apollo",
+  "main": "./lib/src/index.js",
+  "typings": "./lib/src/index.d.ts",
+  "types": "./lib/src/index.d.ts",
+  "scripts": {
+    "compile": "tsc",
+    "watch": "tsc -w",
+    "pretest": "npm run compile",
+    "test": "mocha --reporter spec --full-trace lib/test/tests.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@types/react": "^15.0.14",
+    "@types/redux-form": "^6.3.2",
+    "apollo-client": "^0.10.0",
+    "graphql": "^0.9.1",
+    "graphql-tag": "^1.3.0",
+    "invariant": "^2.2.2",
+    "next": "^1.2.3",
+    "react": "^15.4.2",
+    "react-apollo": "^0.13.0",
+    "react-dom": "^15.4.2",
+    "react-redux": "^5.0.3",
+    "redux": "^3.6.0",
+    "redux-form": "^6.5.0",
+    "redux-thunk": "^2.2.0"
+  },
+  "devDependencies": {
+    "@types/chai": "^3.4.35",
+    "@types/chai-as-promised": "0.0.29",
+    "@types/enzyme": "^2.7.5",
+    "@types/mocha": "^2.2.39",
+    "@types/promises-a-plus": "0.0.27",
+    "@types/react-redux": "^4.4.36",
+    "chai": "^3.5.0",
+    "concurrently": "^3.1.0",
+    "enzyme": "^2.7.1",
+    "es6-promise": "^4.0.5",
+    "react-addons-test-utils": "^15.4.2",
+    "source-map-support": "^0.4.6",
+    "typescript": "^2.1.5"
+  },
+  "optionalDependencies": {
+    "@types/node": "^6.0.38"
+  }
+}
