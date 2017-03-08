@@ -73,47 +73,49 @@ function buildFieldName(variable: VariableNode): string {
   return variable.name.value;
 }
 
-function buildFieldType(type: TypeNode): string {
+const scalarTypeToField = {
+  'String': { component: 'input', type: 'text' },
+  'Int': { component: 'input', type: 'number' },
+  'Float': { component: 'input', type: 'number' },
+  'Boolean': { component: 'input', type: 'checkbox' }
+};
+
+function buildComponent(type: TypeNode, options: any): any {
   invariant( (type.kind == 'NamedType'),
     // tslint:disable-line
     `apollo-redux-form only supports NamedType as variable type`,
   );
   const { name: { value }} = type as NamedTypeNode;
-  let typeName = 'text';
-  switch ( value ){
-    case 'String':
-      typeName = 'text';
-      break;
-    case 'Int':
-      typeName = 'number';
-      break;
-    case 'Float':
-      typeName = 'number';
-      break;
-    case 'Boolean':
-      typeName = 'checkbox';
-      break;
-  }
-  return typeName;
+  const { typeToField } = options;
+  const field = typeToField[value];
+  invariant( !!field,
+    // tslint:disable-line
+    `no resolver for variable type ${value}`,
+  );
+  return field;
 }
 
-function buildField(node: VariableDefinitionNode): JSX.Element {
-  const { variable, type } = node;
+function buildField({ variable, type }: VariableDefinitionNode, options: any): JSX.Element {
   const fieldName = buildFieldName( variable );
-  const fieldType = buildFieldType( type );
+  const { component, ...props } = buildComponent( type, options );
   return (
     <Field key={fieldName}
            name={fieldName}
-           component="input"
-           type={fieldType}
+           component={component}
+           {...props}
     />
   );
 }
 
-export function buildForm(document: DocumentNode, options: ApolloFormInterface = {}): typeof Component & Form<FormData, any, any>{
-  const { initialValues } = options;
+export function buildForm(
+  document: DocumentNode,
+  {initialValues, resolvers}: ApolloFormInterface = {}): typeof Component & Form<FormData, any, any>{
+
   const { name, variables } = parse(document);
-  const fields = variables.map(buildField);
+
+  const typeToField = Object.assign( scalarTypeToField, resolvers );
+
+  const fields = variables.map( variable => buildField(variable, {typeToField}));
   const withForm = reduxForm({
     form: name,
     initialValues,
@@ -131,10 +133,21 @@ export function buildForm(document: DocumentNode, options: ApolloFormInterface =
   });
 }
 
+export interface FormResolver {
+  [key: string]: any;
+  component: string;
+  format?(value:string): string;
+}
+
+export interface FormResolvers {
+  [key: string]: FormResolver;
+}
+
 
 export interface ApolloFormInterface {
   initialValues?: FormData;
   loading?: boolean;
+  resolvers?: FormResolvers
 }
 
 export const initForm = (document: DocumentNode): any => graphql(document, {

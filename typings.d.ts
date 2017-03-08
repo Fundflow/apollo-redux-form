@@ -11,3 +11,7 @@ declare module 'graphql-tag/parser' {
 declare module 'graphql-tag/bundledPrinter' {
   function print(ast: any): string;
 }
+
+declare interface ObjectConstructor {
+    assign(target: any, ...sources: any[]): any;
+}

@@ -42,24 +42,38 @@ describe('buildForm', () => {
     expect( wrapper.find('input[name="average"][type="number"]') ).to.have.length(1);
   });
 
-  it('builds a form with custom types', () => {
-    // enum as input? -> select
+  it('builds a form with standard input types custom inputs', () => {
     const CreatePostForm = buildForm(gql`
 
-      input InputDate {
-
+      input DateInput {
+        value: Int
       }
 
-      input TextArea {
+      input TextAreaInput {
         value: String
       }
 
-      mutation createPost($title: String, createdAt: InputDate, content: TextArea) {
-        createPost(title: $title, content: $content.value, createAt: $createdAt) {
+      mutation createPost($title: String, $createdAt: DateInput, $content: TextAreaInput) {
+        createPost(title: $title, content: $content, createAt: $createdAt) {
           id
           createdAt
         }
-      }`);
+      }`, {
+        resolvers: {
+          DateInput: { component: 'input', type: 'date' },
+          TextAreaInput: { component: 'textarea' }
+        }
+      });
+
+      const wrapper = render(
+        <Provider store={store}>
+          <CreatePostForm />
+        </Provider>
+      );
+
+      expect( wrapper.find('input[name="createdAt"][type="date"]') ).to.have.length(1);
+      expect( wrapper.find('textarea[name="content"]') ).to.have.length(1);
+      expect( wrapper.find('input[name="title"][type="text"]') ).to.have.length(1);
   });
 
   it('builds a form with required fields and validation', () => {

@@ -9,6 +9,11 @@ ReduxForm powered by Apollo and GraphQL
 * Store form state in Redux
 * Submit forms via Apollo
 
+## Roadmap
+
+* select from enum
+* can I manipulate variable values before passing them to mutation?
+* ...
 
 ## References
 
