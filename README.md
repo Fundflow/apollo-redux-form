@@ -12,6 +12,7 @@ ReduxForm powered by Apollo and GraphQL
 ## Roadmap
 
 * select from enum
+* buildForm options with name to specify the name of a mutation (see also apollo-react). In this way we can have only one big GraphQL spec. It is useful because mutation variables could have user defined types.
 * can I manipulate variable values before passing them to mutation?
 * ...
 
