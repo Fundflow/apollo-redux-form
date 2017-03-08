@@ -77,7 +77,8 @@ const scalarTypeToField = {
   'String': { component: 'input', type: 'text' },
   'Int': { component: 'input', type: 'number' },
   'Float': { component: 'input', type: 'number' },
-  'Boolean': { component: 'input', type: 'checkbox' }
+  'Boolean': { component: 'input', type: 'checkbox' },
+  'ID': { component: 'input', type: 'hidden' }
 };
 
 function buildComponent(type: TypeNode, options: any): any {
