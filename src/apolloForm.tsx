@@ -11,6 +11,9 @@ import {
   NamedTypeNode,
   VariableNode,
   TypeNode,
+  TypeDefinitionNode,
+  EnumTypeDefinitionNode,
+  EnumValueDefinitionNode
 } from 'graphql';
 
 import {
@@ -21,18 +24,27 @@ import {
 import { graphql } from 'react-apollo'
 import { Field, reduxForm } from 'redux-form'
 
+interface TypeDefinitionsTable {
+  [type: string]: TypeDefinitionNode;
+}
+
 interface IMutationDefinition {
   name: string;
   variables: VariableDefinitionNode[];
+  types: TypeDefinitionsTable;
 }
 
 function parse(document: DocumentNode): IMutationDefinition {
 
-  let variables, name;
+  let variables, name, types: TypeDefinitionsTable = {};
 
   const fragments = document.definitions.filter(
     (x: DefinitionNode) => x.kind === 'FragmentDefinition',
   );
+
+  document.definitions.filter(
+    (x: DefinitionNode) => x.kind === 'EnumTypeDefinition' ||  x.kind === 'InputObjectTypeDefinition' ,
+  ).forEach( (type: TypeDefinitionNode): void => { types[ type.name.value ] = type;});
 
   const queries = document.definitions.filter(
     (x: DefinitionNode) => x.kind === 'OperationDefinition' && x.operation === 'query',
@@ -65,15 +77,11 @@ function parse(document: DocumentNode): IMutationDefinition {
   variables = definition.variableDefinitions || [];
   let hasName = definition.name && definition.name.kind === 'Name';
   name = hasName && definition.name ? definition.name.value : 'data';
-  return { name, variables };
+  return { name, variables, types };
 
 }
 
-function buildFieldName(variable: VariableNode): string {
-  return variable.name.value;
-}
-
-const scalarTypeToField = {
+const scalarTypeToField: any = {
   'String': { component: 'input', type: 'text' },
   'Int': { component: 'input', type: 'number' },
   'Float': { component: 'input', type: 'number' },
@@ -81,42 +89,58 @@ const scalarTypeToField = {
   'ID': { component: 'input', type: 'hidden' }
 };
 
-function buildComponent(type: TypeNode, options: any): any {
+function buildField({ variable, type }: VariableDefinitionNode, { types, resolvers }: any): JSX.Element | void {
   invariant( (type.kind == 'NamedType'),
     // tslint:disable-line
-    `apollo-redux-form only supports NamedType as variable type`,
+    `apollo-redux-form only supports NamedType as variable type (for now!)`,
   );
-  const { name: { value }} = type as NamedTypeNode;
-  const { typeToField } = options;
-  const field = typeToField[value];
-  invariant( !!field,
-    // tslint:disable-line
-    `no resolver for variable type ${value}`,
-  );
-  return field;
-}
+  const fieldName = variable.name.value;
+  const typeName = (type as NamedTypeNode).name.value;
+  let field;
 
-function buildField({ variable, type }: VariableDefinitionNode, options: any): JSX.Element {
-  const fieldName = buildFieldName( variable );
-  const { component, ...props } = buildComponent( type, options );
-  return (
-    <Field key={fieldName}
-           name={fieldName}
-           component={component}
-           {...props}
-    />
+  field = scalarTypeToField[typeName];
+  if (!!field){ // scalar field
+    return (
+      <Field key={fieldName} name={fieldName}
+             {...field} />
+    );
+  }
+  const typeDef = types[typeName];
+  invariant( !!typeDef,
+    // tslint:disable-line
+    `user defined field ${typeName} does not correspond to any known graphql types`,
   );
+  field = resolvers && resolvers[ typeName ]
+  if (!!field){ // user defined type
+    return (
+      <Field key={fieldName} name={fieldName}
+             {...field} />
+    );
+  } else if ( typeDef.kind === 'EnumTypeDefinition' ){
+    const options = (typeDef as EnumTypeDefinitionNode)
+        .values.map( ({name: {value}}:EnumValueDefinitionNode) => <option key={value} value={value}>{value}</option> );
+    return (
+      <Field key={fieldName}
+             name={fieldName}
+             component='select'
+      >{ options }</Field>
+    );
+  }
+
+  invariant( false,
+    // tslint:disable-line
+    `not able to find a definition for type ${fieldName}`,
+  );
+
 }
 
 export function buildForm(
   document: DocumentNode,
   {initialValues, resolvers}: ApolloFormInterface = {}): typeof Component & Form<FormData, any, any>{
 
-  const { name, variables } = parse(document);
+  const { name, variables, types } = parse(document);
 
-  const typeToField = Object.assign( scalarTypeToField, resolvers );
-
-  const fields = variables.map( variable => buildField(variable, {typeToField}));
+  const fields = variables.map( variable => buildField(variable, {types, resolvers}));
   const withForm = reduxForm({
     form: name,
     initialValues,

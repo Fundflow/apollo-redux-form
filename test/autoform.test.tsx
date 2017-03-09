@@ -76,6 +76,36 @@ describe('buildForm', () => {
       expect( wrapper.find('input[name="title"][type="text"]') ).to.have.length(1);
   });
 
+  it('builds a form with enum', () => {
+    const CreatePostForm = buildForm(gql`
+
+      enum State {
+        NOT_FOUND
+        ACTIVE
+        INACTIVE
+        SUSPENDED
+      }
+
+      mutation updatePost($id: ID, $state: State) {
+        updatePost(id: $id, state: $state) {
+          id
+          createdAt
+        }
+      }`);
+
+      const wrapper = render(
+        <Provider store={store}>
+          <CreatePostForm />
+        </Provider>
+      );
+
+      expect( wrapper.find('select[name="state"]') ).to.have.length(1);
+      expect( wrapper.find('option[value="NOT_FOUND"]') ).to.have.length(1);
+      expect( wrapper.find('option[value="ACTIVE"]') ).to.have.length(1);
+      expect( wrapper.find('option[value="INACTIVE"]') ).to.have.length(1);
+      expect( wrapper.find('option[value="SUSPENDED"]') ).to.have.length(1);
+  });
+
   it('builds a form with required fields and validation', () => {
     const CreatePostForm = buildForm(gql`
       mutation createPost($title: String!) {
