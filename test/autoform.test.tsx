@@ -108,12 +108,19 @@ describe('buildForm', () => {
 
   it('builds a form with required fields and validation', () => {
     const CreatePostForm = buildForm(gql`
-      mutation createPost($title: String!) {
-        createPost(title: $title, createAt: $createdAt) {
+      mutation createPost($title: String!, $isDraft: Boolean ) {
+        createPost(title: $title, isDraft: $isDraft) {
           id
           createdAt
         }
       }`);
+      const wrapper = render(
+        <Provider store={store}>
+          <CreatePostForm />
+        </Provider>
+      );
+      expect( wrapper.find('input[name="title"][type="text"][required]') ).to.have.length(1);
+      expect( wrapper.find('input[name="isDraft"][type="checkbox"]') ).to.have.length(1);
   });
 
 });

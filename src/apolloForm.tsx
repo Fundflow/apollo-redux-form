@@ -4,17 +4,20 @@ import {Component } from '@types/react';
 const invariant = require('invariant');
 
 import {
+  visit,
   DocumentNode,
   DefinitionNode,
   VariableDefinitionNode,
   OperationDefinitionNode,
   NamedTypeNode,
+  NonNullTypeNode,
   VariableNode,
   TypeNode,
   TypeDefinitionNode,
   EnumTypeDefinitionNode,
   EnumValueDefinitionNode
 } from 'graphql';
+
 
 import {
   FormDecorator,
@@ -89,49 +92,52 @@ const scalarTypeToField: any = {
   'ID': { component: 'input', type: 'hidden' }
 };
 
-function buildField({ variable, type }: VariableDefinitionNode, { types, resolvers }: any): JSX.Element | void {
-  invariant( (type.kind == 'NamedType'),
-    // tslint:disable-line
-    `apollo-redux-form only supports NamedType as variable type (for now!)`,
-  );
-  const fieldName = variable.name.value;
-  const typeName = (type as NamedTypeNode).name.value;
-  let field;
+function buildFieldsVisitor(options: any): any{
+  return {
+    VariableDefinition(node: VariableDefinitionNode) {
+      const { variable: { name: {value} }, type } = node;
+      const { inner, ...props } = visit(type, buildFieldsVisitor(options), {});
+      return (
+        <Field key={value} name={value} {...props} >
+          {inner}
+        </Field>
+      );
+    },
+    NamedType(node: NamedTypeNode) {
+      const { types, resolvers } = options;
+      const { name: { value } } = node;
+      let props;
 
-  field = scalarTypeToField[typeName];
-  if (!!field){ // scalar field
-    return (
-      <Field key={fieldName} name={fieldName}
-             {...field} />
-    );
-  }
-  const typeDef = types[typeName];
-  invariant( !!typeDef,
-    // tslint:disable-line
-    `user defined field ${typeName} does not correspond to any known graphql types`,
-  );
-  field = resolvers && resolvers[ typeName ]
-  if (!!field){ // user defined type
-    return (
-      <Field key={fieldName} name={fieldName}
-             {...field} />
-    );
-  } else if ( typeDef.kind === 'EnumTypeDefinition' ){
-    const options = (typeDef as EnumTypeDefinitionNode)
-        .values.map( ({name: {value}}:EnumValueDefinitionNode) => <option key={value} value={value}>{value}</option> );
-    return (
-      <Field key={fieldName}
-             name={fieldName}
-             component='select'
-      >{ options }</Field>
-    );
-  }
+      props = scalarTypeToField[value];
+      if (!!props){
+        return props;
+      }
 
-  invariant( false,
-    // tslint:disable-line
-    `not able to find a definition for type ${fieldName}`,
-  );
+      const typeDef = types[value];
+      invariant( !!typeDef,
+        // tslint:disable-line
+        `user defined field ${value} does not correspond to any known graphql types`,
+      );
+      props = resolvers && resolvers[ value ]
+      if (!!props){ // user defined type
+        return props
+      } else if ( typeDef.kind === 'EnumTypeDefinition' ){
+        const options = (typeDef as EnumTypeDefinitionNode)
+            .values.map( ({name: {value}}:EnumValueDefinitionNode) => <option key={value} value={value}>{value}</option> );
+        return { component: 'select', inner: options };
+      }
 
+      invariant( false,
+        // tslint:disable-line
+        `not able to find a definition for type ${value}`,
+      );
+    },
+    NonNullType(node: NonNullTypeNode){
+      const { type } = node;
+      const props = visit(type, buildFieldsVisitor(options), {});
+      return { required:true, ...props };
+    }
+  };
 }
 
 export function buildForm(
@@ -139,8 +145,8 @@ export function buildForm(
   {initialValues, resolvers}: ApolloFormInterface = {}): typeof Component & Form<FormData, any, any>{
 
   const { name, variables, types } = parse(document);
+  const fields = visit(variables, buildFieldsVisitor({types, resolvers}), {});
 
-  const fields = variables.map( variable => buildField(variable, {types, resolvers}));
   const withForm = reduxForm({
     form: name,
     initialValues,
