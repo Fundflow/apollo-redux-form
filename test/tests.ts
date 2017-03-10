@@ -8,3 +8,4 @@ process.env.NODE_ENV = 'test';
 
 import './autoform.test';
 import './apollo.test';
+import './init.test';

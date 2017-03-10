@@ -37,6 +37,23 @@ interface IMutationDefinition {
   types: TypeDefinitionsTable;
 }
 
+function findQuery(document: DocumentNode): IMutationDefinition {
+  let variables, name, types: TypeDefinitionsTable = {};
+  const queries = document.definitions.filter(
+    (x: DefinitionNode) => x.kind === 'OperationDefinition' && x.operation === 'query',
+  );
+  invariant((queries.length === 1),
+    // tslint:disable-line
+    `apollo-redux-form expects exactly one query`,
+  );
+  const definitions = queries;
+  const definition = definitions[0] as OperationDefinitionNode;
+  variables = definition.variableDefinitions || [];
+  let hasName = definition.name && definition.name.kind === 'Name';
+  name = hasName && definition.name ? definition.name.value : 'data';
+  return { name, variables, types };
+}
+
 function parse(document: DocumentNode): IMutationDefinition {
 
   let variables, name, types: TypeDefinitionsTable = {};
@@ -142,14 +159,13 @@ function buildFieldsVisitor(options: any): any{
 
 export function buildForm(
   document: DocumentNode,
-  {initialValues, resolvers}: ApolloFormInterface = {}): typeof Component & Form<FormData, any, any>{
+  {initialValues, resolvers}: ApolloFormInterface = {}): any {
 
   const { name, variables, types } = parse(document);
   const fields = visit(variables, buildFieldsVisitor({types, resolvers}), {});
   const requiredFields =
     variables.filter( (variable) => variable.type.kind === 'NonNullType')
              .map( (variable) => variable.variable.name.value );
-
   const withForm = reduxForm({
     form: name,
     initialValues,
@@ -194,11 +210,17 @@ export interface ApolloFormInterface {
   onSubmit?: any;
 }
 
-export const initForm = (document: DocumentNode): any => graphql(document, {
-  props: ({ ownProps, data: { loading, initialValues } }) => ({
-    loading,
-    initialValues
-  }),
+export const initForm = (document: DocumentNode, options: any): any => graphql(document, {
+  options,
+  props: ({ data }) => {
+    const {loading, error} = data;
+    const { name } = findQuery(document);
+    const initialValues = data[name];
+    return {
+      loading,
+      initialValues,
+    };
+  }
 });
 
 export function apolloForm(
