@@ -1,6 +1,7 @@
 import * as React from 'react'
 
 import { assert, expect } from 'chai'
+import * as sinon from 'sinon'
 
 import gql from 'graphql-tag'
 import {
@@ -19,7 +20,16 @@ const reducers = {
 const reducer = combineReducers(reducers)
 const store = createStore(reducer)
 
-import { render } from 'enzyme';
+import { render, mount } from 'enzyme'
+
+const globalAny:any = global;
+
+// some dirty hacks following
+// http://stackoverflow.com/questions/40743131/how-to-prevent-property-does-not-exist-on-type-global-with-jsdom-and-t
+const jsdom = require('jsdom');
+const document = jsdom.jsdom('<!doctype html><html><body></body></html>');
+globalAny.document = document;
+globalAny.window = document.defaultView;
 
 describe('buildForm', () => {
 
@@ -106,7 +116,7 @@ describe('buildForm', () => {
       expect( wrapper.find('option[value="SUSPENDED"]') ).to.have.length(1);
   });
 
-  it('builds a form with required fields and validation', () => {
+  it('builds a form with required fields', () => {
     const CreatePostForm = buildForm(gql`
       mutation createPost($title: String!, $isDraft: Boolean ) {
         createPost(title: $title, isDraft: $isDraft) {
@@ -123,4 +133,35 @@ describe('buildForm', () => {
       expect( wrapper.find('input[name="isDraft"][type="checkbox"]') ).to.have.length(1);
   });
 
+});
+
+describe('a form is invalid', () => {
+
+  it('iff required fields are missing', () => {
+    const CreatePostForm = buildForm(gql`
+      mutation createPost($title: String!, $isDraft: Boolean ) {
+        createPost(title: $title, isDraft: $isDraft) {
+          id
+          createdAt
+        }
+      }`);
+    const handleSubmit = sinon.spy();
+    const wrapper = mount(
+      <Provider store={store}>
+        <CreatePostForm />
+      </Provider>
+    );
+    let state: any, errors: any;
+
+    state = store.getState();
+    errors = state['form']['createPost']['syncErrors'];
+    expect(errors).to.deep.equal({ title: 'Required field.' });
+
+    wrapper.find('input').first().simulate('change', { target: { value: 'A new required title' } });
+
+    state = store.getState();
+    errors = state['form']['createPost']['syncErrors'];
+    expect(errors).to.equal(undefined);
+
+  });
 });

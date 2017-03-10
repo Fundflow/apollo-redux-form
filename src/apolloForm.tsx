@@ -146,10 +146,22 @@ export function buildForm(
 
   const { name, variables, types } = parse(document);
   const fields = visit(variables, buildFieldsVisitor({types, resolvers}), {});
+  const requiredFields =
+    variables.filter( (variable) => variable.type.kind === 'NonNullType')
+             .map( (variable) => variable.variable.name.value );
 
   const withForm = reduxForm({
     form: name,
     initialValues,
+    validate(values: any){
+      const errors: any = {};
+      requiredFields.forEach( (fieldName: string) => {
+        if ( !values[fieldName] ){
+          errors[ fieldName ] = 'Required field.'
+        }
+      });
+      return errors;
+    }
   });
   return withForm( class FormComponent extends React.Component<any, any> {
     render(){
