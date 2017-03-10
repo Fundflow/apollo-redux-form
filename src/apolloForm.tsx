@@ -190,7 +190,8 @@ export interface FormResolvers {
 export interface ApolloFormInterface {
   initialValues?: FormData;
   loading?: boolean;
-  resolvers?: FormResolvers
+  resolvers?: FormResolvers;
+  onSubmit?: any;
 }
 
 export const initForm = (document: DocumentNode): any => graphql(document, {
@@ -208,16 +209,28 @@ export function apolloForm(
   options: ApolloFormInterface = {}
 ){
 
+  const { onSubmit } = options;
+
   const withData = graphql(document, {
     props: ({ mutate }) => ({
       // variables contains right fields
       // because form is created from mutation variables
-      handleSubmit: (variables: any) => mutate({
-        variables,
-        ... options
-      })
+      handleSubmit: (variables: any) => {
+        mutate({
+          variables,
+          ... options
+        }).then(onSubmit).catch(console.log)
+      }
     })
   });
 
-  return (props: any) => withData(buildForm(document, props));
+  // XXX add onSubmit to Form
+  const Form = buildForm(document, options) as any;
+
+  return withData( (props: any) => {
+    const { handleSubmit } = props;
+    return (
+      <Form onSubmit={handleSubmit} />
+    );
+  });
 }
