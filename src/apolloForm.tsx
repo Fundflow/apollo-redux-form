@@ -250,9 +250,9 @@ export function apolloForm(
   const Form = buildForm(document, options) as any;
 
   return withData( (props: any) => {
-    const { handleSubmit } = props;
+    const { handleSubmit, ...rest } = props;
     return (
-      <Form onSubmit={handleSubmit} />
+      <Form onSubmit={handleSubmit} {...rest}/>
     );
   });
 }
