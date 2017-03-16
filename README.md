@@ -11,7 +11,6 @@ ReduxForm powered by Apollo and GraphQL
 
 ## Roadmap
 
-* deactivate submit if invalid or submitting
 * handle errors
 * be more specific with types, e.g. replace "any" with better type
 * buildForm options with name to specify the name of a mutation (see also apollo-react). In this way we can have only one big GraphQL spec. It is useful because mutation variables could have user defined types.
