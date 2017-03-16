@@ -9,7 +9,9 @@
     "compile": "tsc",
     "watch": "tsc -w",
     "pretest": "npm run compile",
-    "test": "mocha --reporter spec --full-trace lib/test/tests.js"
+    "test": "mocha --reporter spec --full-trace lib/test/tests.js",
+    "storybook": "start-storybook -p 6006",
+    "build-storybook": "build-storybook"
   },
   "author": "",
   "license": "MIT",
@@ -46,7 +48,8 @@
     "react-addons-test-utils": "^15.4.2",
     "sinon": "^1.17.7",
     "source-map-support": "^0.4.6",
-    "typescript": "^2.1.5"
+    "typescript": "^2.1.5",
+    "@kadira/storybook": "^2.21.0"
   },
   "optionalDependencies": {
     "@types/node": "^6.0.38"
