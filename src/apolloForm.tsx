@@ -188,11 +188,13 @@ export function buildForm(
   });
   return withForm( class FormComponent extends React.Component<any, any> {
     render(){
-      const { handleSubmit, pristine, submitting } = this.props;
+      const { handleSubmit, pristine, submitting, invalid } = this.props;
       return (
         <form onSubmit={handleSubmit}>
           {fields}
-          <button type='submit' disabled={pristine || submitting}>Submit</button>
+          <button type='submit' disabled={pristine || submitting || invalid}>
+            Submit
+          </button>
         </form>
       );
     }
