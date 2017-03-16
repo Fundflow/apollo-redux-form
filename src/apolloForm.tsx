@@ -120,7 +120,7 @@ function buildFieldsVisitor(options: any): any{
         <div key={value}>
           <label>{fromCamelToHuman(value)}</label>
           <div>
-            <Field name={value} {...props} >
+            <Field name={value} placeholder={value} {...props} >
               {inner}
             </Field>
           </div>
