@@ -27,6 +27,8 @@ import {
 import { graphql } from 'react-apollo'
 import { Field, reduxForm } from 'redux-form'
 
+import { fromCamelToHuman } from './utils'
+
 interface TypeDefinitionsTable {
   [type: string]: TypeDefinitionNode;
 }
@@ -115,9 +117,14 @@ function buildFieldsVisitor(options: any): any{
       const { variable: { name: {value} }, type } = node;
       const { inner, ...props } = visit(type, buildFieldsVisitor(options), {});
       return (
-        <Field key={value} name={value} {...props} >
-          {inner}
-        </Field>
+        <div key={value}>
+          <label>{fromCamelToHuman(value)}</label>
+          <div>
+            <Field name={value} {...props} >
+              {inner}
+            </Field>
+          </div>
+        </div>
       );
     },
     NamedType(node: NamedTypeNode) {
