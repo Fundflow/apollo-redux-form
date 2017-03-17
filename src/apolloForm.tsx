@@ -111,20 +111,26 @@ const scalarTypeToField: any = {
   'ID': { component: 'input', type: 'hidden' }
 };
 
+const renderField = (Component: any, { input, label, inner, meta: { touched, error, warning }, ...props }: any) => (
+  <div>
+    <label>{label}</label>
+    <div>
+      <Component {...input} placeholder={label} {...props}>
+        {inner}
+      </Component>
+      {touched && ((error && <span>{error}</span>) || (warning && <span>{warning}</span>))}
+    </div>
+  </div>
+)
+
 function buildFieldsVisitor(options: any): any{
   return {
     VariableDefinition(node: VariableDefinitionNode) {
       const { variable: { name: {value} }, type } = node;
-      const { inner, ...props } = visit(type, buildFieldsVisitor(options), {});
+      const { component, ...props } = visit(type, buildFieldsVisitor(options), {});
       return (
-        <div key={value}>
-          <label>{fromCamelToHuman(value)}</label>
-          <div>
-            <Field name={value} placeholder={value} {...props} >
-              {inner}
-            </Field>
-          </div>
-        </div>
+        <Field key={value} name={value} label={fromCamelToHuman(value)}
+               component={renderField.bind(undefined, component)} {...props} />
       );
     },
     NamedType(node: NamedTypeNode) {
