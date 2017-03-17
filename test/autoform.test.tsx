@@ -53,8 +53,7 @@ describe('buildForm', () => {
   });
 
   it('builds a form with standard input types custom inputs', () => {
-    const CreatePostForm = buildForm(gql`
-
+    const defs = gql`
       input DateInput {
         value: Int
       }
@@ -62,7 +61,8 @@ describe('buildForm', () => {
       input TextAreaInput {
         value: String
       }
-
+    `;
+    const CreatePostForm = buildForm(gql`
       mutation createPost($title: String, $createdAt: DateInput, $content: TextAreaInput) {
         createPost(title: $title, content: $content, createAt: $createdAt) {
           id
@@ -72,7 +72,8 @@ describe('buildForm', () => {
         resolvers: {
           DateInput: { component: 'input', type: 'date' },
           TextAreaInput: { component: 'textarea' }
-        }
+        },
+        defs,
       });
 
       const wrapper = render(
@@ -87,21 +88,22 @@ describe('buildForm', () => {
   });
 
   it('builds a form with enum', () => {
-    const CreatePostForm = buildForm(gql`
-
+    const defs = gql`
       enum State {
         NOT_FOUND
         ACTIVE
         INACTIVE
         SUSPENDED
       }
-
+    `;
+    const query = gql`
       mutation updatePost($id: ID, $state: State) {
         updatePost(id: $id, state: $state) {
           id
           createdAt
         }
-      }`);
+      }`;
+    const CreatePostForm = buildForm(query, {defs});
 
       const wrapper = render(
         <Provider store={store}>

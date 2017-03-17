@@ -15,7 +15,8 @@ import {
   TypeNode,
   TypeDefinitionNode,
   EnumTypeDefinitionNode,
-  EnumValueDefinitionNode
+  EnumValueDefinitionNode,
+  GraphQLSchema,
 } from 'graphql';
 
 
@@ -36,11 +37,10 @@ interface TypeDefinitionsTable {
 interface IMutationDefinition {
   name: string;
   variables: VariableDefinitionNode[];
-  types: TypeDefinitionsTable;
 }
 
 function findQuery(document: DocumentNode): IMutationDefinition {
-  let variables, name, types: TypeDefinitionsTable = {};
+  let variables, name;
   const queries = document.definitions.filter(
     (x: DefinitionNode) => x.kind === 'OperationDefinition' && x.operation === 'query',
   );
@@ -53,20 +53,26 @@ function findQuery(document: DocumentNode): IMutationDefinition {
   variables = definition.variableDefinitions || [];
   let hasName = definition.name && definition.name.kind === 'Name';
   name = hasName && definition.name ? definition.name.value : 'data';
-  return { name, variables, types };
+  return { name, variables };
+}
+
+function findTypeDefinitions(document: DocumentNode|undefined): TypeDefinitionsTable {
+  const types: TypeDefinitionsTable = {};
+
+  document && document.definitions.filter(
+    (x: DefinitionNode) => x.kind === 'EnumTypeDefinition' ||  x.kind === 'InputObjectTypeDefinition' ,
+  ).forEach( (type: TypeDefinitionNode): void => { types[ type.name.value ] = type;});
+
+  return types;
 }
 
 function parse(document: DocumentNode): IMutationDefinition {
 
-  let variables, name, types: TypeDefinitionsTable = {};
+  let variables, name;
 
   const fragments = document.definitions.filter(
     (x: DefinitionNode) => x.kind === 'FragmentDefinition',
   );
-
-  document.definitions.filter(
-    (x: DefinitionNode) => x.kind === 'EnumTypeDefinition' ||  x.kind === 'InputObjectTypeDefinition' ,
-  ).forEach( (type: TypeDefinitionNode): void => { types[ type.name.value ] = type;});
 
   const queries = document.definitions.filter(
     (x: DefinitionNode) => x.kind === 'OperationDefinition' && x.operation === 'query',
@@ -99,7 +105,7 @@ function parse(document: DocumentNode): IMutationDefinition {
   variables = definition.variableDefinitions || [];
   let hasName = definition.name && definition.name.kind === 'Name';
   name = hasName && definition.name ? definition.name.value : 'data';
-  return { name, variables, types };
+  return { name, variables };
 
 }
 
@@ -172,9 +178,10 @@ function buildFieldsVisitor(options: any): any{
 
 export function buildForm(
   document: DocumentNode,
-  {initialValues, resolvers}: ApolloFormInterface = {}): any {
+  {initialValues, resolvers, defs}: ApolloFormInterface = {}): any {
 
-  const { name, variables, types } = parse(document);
+  const { name, variables } = parse(document);
+  const types = findTypeDefinitions(defs);
   const fields = visit(variables, buildFieldsVisitor({types, resolvers}), {});
   const requiredFields =
     variables.filter( (variable) => variable.type.kind === 'NonNullType')
@@ -223,6 +230,7 @@ export interface ApolloFormInterface {
   loading?: boolean;
   resolvers?: FormResolvers;
   onSubmit?: any;
+  defs?: DocumentNode
 }
 
 export const initForm = (document: DocumentNode, options: any): any => graphql(document, {
