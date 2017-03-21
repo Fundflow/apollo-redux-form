@@ -42,6 +42,16 @@ const withInit = initForm(query, { variables: { id: '123' } });
 const PrefilledUpdatePostForm = withInit(apolloForm( /* ... */));
 ```
 
+## A quick look
+
+Some user stories powered by React Storybook.
+
+```
+$ npm install
+$ yarn run storybook
+// point your browser to http://localhost:6006/
+```
+
 ## Roadmap
 
 * handle errors
