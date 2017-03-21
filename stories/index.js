@@ -8,6 +8,8 @@ import { createStore, combineReducers, applyMiddleware, Reducer } from 'redux'
 import { reducer as formReducer } from 'redux-form'
 import { Provider } from 'react-redux'
 
+import styles from './pretty-forms.css'
+
 class LocalNetworkInterface implements NetworkInterface {
   query(request){
     action('apollo-query').call(undefined, request);
@@ -36,7 +38,7 @@ storiesOf('Create post', module)
   .add('send data via Apollo', () => (
     <ApolloProvider client={client}>
       <Provider store={store}>
-        <CreatePostForm />
+        <CreatePostForm styles={styles} />
       </Provider>
     </ApolloProvider>
   ));
