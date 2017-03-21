@@ -3,6 +3,8 @@ import * as React from 'react'
 import { assert, expect } from 'chai'
 import * as sinon from 'sinon'
 
+import * as moment from 'moment'
+
 import gql from 'graphql-tag'
 import {
   apolloForm,
@@ -133,6 +135,49 @@ describe('buildForm', () => {
       );
       expect( wrapper.find('input[name="title"][type="text"][required]') ).to.have.length(1);
       expect( wrapper.find('input[name="isDraft"][type="checkbox"]') ).to.have.length(1);
+  });
+
+  it('builds a form with custom scalar types', (done: any) => {
+    const defs = gql`
+      scalar Date
+    `;
+    const CreatePostForm = buildForm(gql`
+      mutation createPost($title: String, $createdAt: Date) {
+        createPost(title: $title, createAt: $createdAt) {
+          id
+          createdAt
+        }
+      }`, {
+        resolvers: {
+          Date: {
+            component: 'input',
+            type: 'date',
+            format: (value: string) => moment(value).format('YYYY-MM-DD'),
+            normalize: (value: string) => moment(value, 'YYYY-MM-DD').toDate().getTime()
+          },
+        },
+        defs,
+      });
+      const createdAt = Date.now();
+      const formattedTime = moment(createdAt).format('YYYY-MM-DD');
+      const initialValues = { createdAt };
+      const handleSubmit = (data: any) => {
+        expect(data).to.deep.equal({ createdAt });
+        done();
+      }
+
+      const wrapper = mount(
+        <Provider store={store}>
+          <CreatePostForm initialValues={initialValues} onSubmit={handleSubmit} />
+        </Provider>
+      );
+
+      const selector = `input[name="createdAt"][type="date"][value="${formattedTime}"]`;
+
+      expect( wrapper.find(selector) ).to.have.length(1);
+
+      wrapper.find('form').simulate('submit');
+
   });
 
 });

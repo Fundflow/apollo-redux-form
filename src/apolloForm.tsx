@@ -60,7 +60,7 @@ function findTypeDefinitions(document: DocumentNode|undefined): TypeDefinitionsT
   const types: TypeDefinitionsTable = {};
 
   document && document.definitions.filter(
-    (x: DefinitionNode) => x.kind === 'EnumTypeDefinition' ||  x.kind === 'InputObjectTypeDefinition' ,
+    (x: DefinitionNode) => x.kind === 'EnumTypeDefinition' ||  x.kind === 'InputObjectTypeDefinition' || x.kind === 'ScalarTypeDefinition',
   ).forEach( (type: TypeDefinitionNode): void => { types[ type.name.value ] = type;});
 
   return types;
@@ -224,13 +224,15 @@ export interface FormResolvers {
   [key: string]: FormResolver;
 }
 
-
+// TODO it should Apollo & ReduxForm options
 export interface ApolloFormInterface {
   initialValues?: FormData;
   loading?: boolean;
   resolvers?: FormResolvers;
   onSubmit?: any;
-  defs?: DocumentNode
+  defs?: DocumentNode;
+  format?: any;
+  normalize?: any;
 }
 
 export const initForm = (document: DocumentNode, options: any): any => graphql(document, {

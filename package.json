@@ -32,6 +32,7 @@
     "redux-thunk": "^2.2.0"
   },
   "devDependencies": {
+    "@kadira/storybook": "^2.21.0",
     "@types/chai": "^3.4.35",
     "@types/chai-as-promised": "0.0.29",
     "@types/enzyme": "^2.7.5",
@@ -45,11 +46,11 @@
     "enzyme": "^2.7.1",
     "es6-promise": "^4.1.0",
     "jsdom": "^9.11.0",
+    "moment": "^2.18.0",
     "react-addons-test-utils": "^15.4.2",
     "sinon": "^1.17.7",
     "source-map-support": "^0.4.6",
-    "typescript": "^2.1.5",
-    "@kadira/storybook": "^2.21.0"
+    "typescript": "^2.1.5"
   },
   "optionalDependencies": {
     "@types/node": "^6.0.38"
