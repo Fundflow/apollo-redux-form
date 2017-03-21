@@ -55,6 +55,7 @@ $ yarn run storybook
 ## Roadmap
 
 * handle errors
+* custom component, e.g. slider instead of checkbox
 * be more specific with types, e.g. replace "any" with better type
 * ...
 
