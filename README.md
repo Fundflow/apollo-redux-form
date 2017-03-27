@@ -1,3 +1,5 @@
+> *Warning.* This project is still WIP. Feedback is welcome.
+
 # Apollo ReduxForm
 
 ReduxForm powered by Apollo and GraphQL
