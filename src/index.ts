@@ -1,11 +1,11 @@
 import {
   apolloForm,
   buildForm,
-  initForm
+  initForm,
 } from './apolloForm';
 
 export {
   apolloForm,
   buildForm,
-  initForm
+  initForm,
 }

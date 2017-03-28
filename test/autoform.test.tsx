@@ -1,34 +1,34 @@
-import * as React from 'react'
+import * as React from 'react';
 
-import { assert, expect } from 'chai'
-import * as sinon from 'sinon'
+import { assert, expect } from 'chai';
+import * as sinon from 'sinon';
 
-import * as moment from 'moment'
+import * as moment from 'moment';
 
-import gql from 'graphql-tag'
+import gql from 'graphql-tag';
 import {
   apolloForm,
   buildForm,
   initForm,
 } from '../src/index';
 
-import { createStore, combineReducers } from 'redux'
-import { reducer as formReducer } from 'redux-form'
-import { Provider } from 'react-redux'
+import { createStore, combineReducers } from 'redux';
+import { reducer as formReducer } from 'redux-form';
+import { Provider } from 'react-redux';
 
 const reducers = {
-  form: formReducer
-}
-const reducer = combineReducers(reducers)
-const store = createStore(reducer)
+  form: formReducer,
+};
+const reducer = combineReducers(reducers);
+const store = createStore(reducer);
 
-import { render, mount } from 'enzyme'
+import { render, mount } from 'enzyme';
 
-const globalAny:any = global;
+const globalAny: any = global;
 
 // some dirty hacks following
 // http://stackoverflow.com/questions/40743131/how-to-prevent-property-does-not-exist-on-type-global-with-jsdom-and-t
-const jsdom = require('jsdom');
+const jsdom = require('jsdom'); // tslint:disable-line
 const document = jsdom.jsdom('<!doctype html><html><body></body></html>');
 globalAny.document = document;
 globalAny.window = document.defaultView;
@@ -46,7 +46,7 @@ describe('buildForm', () => {
     const wrapper = render(
       <Provider store={store}>
         <CreatePostForm />
-      </Provider>
+      </Provider>,
     );
     expect( wrapper.find('input[name="title"][type="text"]') ).to.have.length(1);
     expect( wrapper.find('input[name="isDraft"][type="checkbox"]') ).to.have.length(1);
@@ -73,7 +73,7 @@ describe('buildForm', () => {
       }`, {
         resolvers: {
           DateInput: { component: 'input', type: 'date' },
-          TextAreaInput: { component: 'textarea' }
+          TextAreaInput: { component: 'textarea' },
         },
         defs,
       });
@@ -81,7 +81,7 @@ describe('buildForm', () => {
       const wrapper = render(
         <Provider store={store}>
           <CreatePostForm />
-        </Provider>
+        </Provider>,
       );
 
       expect( wrapper.find('input[name="createdAt"][type="date"]') ).to.have.length(1);
@@ -110,7 +110,7 @@ describe('buildForm', () => {
       const wrapper = render(
         <Provider store={store}>
           <CreatePostForm />
-        </Provider>
+        </Provider>,
       );
 
       expect( wrapper.find('select[name="state"]') ).to.have.length(1);
@@ -131,7 +131,7 @@ describe('buildForm', () => {
       const wrapper = render(
         <Provider store={store}>
           <CreatePostForm />
-        </Provider>
+        </Provider>,
       );
       expect( wrapper.find('input[name="title"][type="text"][required]') ).to.have.length(1);
       expect( wrapper.find('input[name="isDraft"][type="checkbox"]') ).to.have.length(1);
@@ -153,7 +153,7 @@ describe('buildForm', () => {
             component: 'input',
             type: 'date',
             format: (value: string) => moment(value).format('YYYY-MM-DD'),
-            normalize: (value: string) => moment(value, 'YYYY-MM-DD').toDate().getTime()
+            normalize: (value: string) => moment(value, 'YYYY-MM-DD').toDate().getTime(),
           },
         },
         defs,
@@ -164,12 +164,12 @@ describe('buildForm', () => {
       const handleSubmit = (data: any) => {
         expect(data).to.deep.equal({ createdAt });
         done();
-      }
+      };
 
       const wrapper = mount(
         <Provider store={store}>
           <CreatePostForm initialValues={initialValues} onSubmit={handleSubmit} />
-        </Provider>
+        </Provider>,
       );
 
       const selector = `input[name="createdAt"][type="date"][value="${formattedTime}"]`;
@@ -196,7 +196,7 @@ describe('a form is invalid', () => {
     const wrapper = mount(
       <Provider store={store}>
         <CreatePostForm />
-      </Provider>
+      </Provider>,
     );
     let state: any, errors: any;
 

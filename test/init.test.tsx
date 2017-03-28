@@ -1,28 +1,28 @@
 // some dirty hacks following
 // http://stackoverflow.com/questions/40743131/how-to-prevent-property-does-not-exist-on-type-global-with-jsdom-and-t
-const globalAny:any = global;
-const jsdom = require('jsdom');
+const globalAny: any = global;
+const jsdom = require('jsdom'); // tslint:disable-line
 const document = jsdom.jsdom('<!doctype html><html><body></body></html>');
 globalAny.document = document;
 globalAny.window = document.defaultView;
 
-import * as React from 'react'
+import * as React from 'react';
 
-import { assert, expect } from 'chai'
-import { mount } from 'enzyme'
+import { assert, expect } from 'chai';
+import { mount } from 'enzyme';
 
-import gql from 'graphql-tag'
+import gql from 'graphql-tag';
 import {
   initForm, buildForm, apolloForm,
 } from '../src/index';
 
-import ApolloClient from 'apollo-client'
-import { ApolloProvider } from 'react-apollo'
-import { mockNetworkInterface } from 'apollo-test-utils'
+import ApolloClient from 'apollo-client';
+import { ApolloProvider } from 'react-apollo';
+import { mockNetworkInterface } from 'apollo-test-utils';
 
-import { createStore, combineReducers, applyMiddleware, Reducer } from 'redux'
-import { reducer as formReducer } from 'redux-form'
-import { Provider } from 'react-redux'
+import { createStore, combineReducers, applyMiddleware, Reducer } from 'redux';
+import { reducer as formReducer } from 'redux-form';
+import { Provider } from 'react-redux';
 
 describe('initForm', () => {
 
@@ -39,7 +39,7 @@ describe('initForm', () => {
     isDraft: true,
     views: 100,
     average: 20.50,
-    createdAt: '2011.12.12'
+    createdAt: '2011.12.12',
   } };
 
   it('initializes redux-form with initial values from query', (done: any) => {
@@ -54,17 +54,16 @@ describe('initForm', () => {
           id
           updatedAt
         }
-      }`
-    ));
+      }`));
 
     const store = createStore(
       combineReducers({
         form: formReducer,
         // XXX client.reducer() type too generic
-        apollo: client.reducer() as Reducer<any>
+        apollo: client.reducer() as Reducer<any>,
       }),
       {}, // init state
-      applyMiddleware(client.middleware())
+      applyMiddleware(client.middleware()),
     );
 
     const wrapper = mount(
@@ -72,7 +71,7 @@ describe('initForm', () => {
         <Provider store={store}>
             <UpdatePostForm />
         </Provider>
-      </ApolloProvider>
+      </ApolloProvider>,
     );
 
     // XXX how to wait until initial values are loaded?
@@ -97,17 +96,16 @@ describe('initForm', () => {
           id
           updatedAt
         }
-      }`
-    ));
+      }`));
 
     const store = createStore(
       combineReducers({
         form: formReducer,
         // XXX client.reducer() type too generic
-        apollo: client.reducer() as Reducer<any>
+        apollo: client.reducer() as Reducer<any>,
       }),
       {}, // init state
-      applyMiddleware(client.middleware())
+      applyMiddleware(client.middleware()),
     );
 
     const wrapper = mount(
@@ -115,7 +113,7 @@ describe('initForm', () => {
         <Provider store={store}>
             <UpdatePostForm />
         </Provider>
-      </ApolloProvider>
+      </ApolloProvider>,
     );
 
     // XXX how to wait until initial values are loaded?

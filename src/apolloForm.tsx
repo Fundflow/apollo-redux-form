@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Component } from '@types/react';
 
-const invariant = require('invariant');
+const invariant = require('invariant'); // tslint:disable-line
 
 import {
   visit,
@@ -19,18 +19,18 @@ import {
   GraphQLSchema,
 } from 'graphql';
 
-import { MutationOptions, QueryOptions } from 'react-apollo/lib/graphql'
-import { Config } from 'redux-form'
+import { MutationOptions, QueryOptions } from 'react-apollo/lib/graphql';
+import { Config } from 'redux-form';
 
 import {
   FormDecorator,
   Form,
 } from '@types/redux-form';
 
-import { graphql } from 'react-apollo'
-import { Field, reduxForm } from 'redux-form'
+import { graphql } from 'react-apollo';
+import { Field, reduxForm } from 'redux-form';
 
-import { fromCamelToHuman } from './utils'
+import { fromCamelToHuman } from './utils';
 
 export type OperationTypeNode = 'query' | 'mutation';
 
@@ -66,12 +66,14 @@ interface OperationSignature {
 function buildTypesTable(document?: DocumentNode): TypeDefinitions {
   const types: TypeDefinitions = {};
 
-  document && document.definitions.filter(
-    (x: DefinitionNode) =>
-      x.kind === 'EnumTypeDefinition' ||
-      x.kind === 'InputObjectTypeDefinition' ||
-      x.kind === 'ScalarTypeDefinition',
-  ).forEach( (type: TypeDefinitionNode): void => { types[ type.name.value ] = type;});
+  if ( document ) {
+    document.definitions.filter(
+      (x: DefinitionNode) =>
+        x.kind === 'EnumTypeDefinition' ||
+        x.kind === 'InputObjectTypeDefinition' ||
+        x.kind === 'ScalarTypeDefinition',
+    ).forEach( (type: TypeDefinitionNode): void => { types[ type.name.value ] = type; });
+  }
 
   return types;
 }
@@ -97,7 +99,7 @@ const scalarTypeToField: any = {
   'Int': { component: 'input', type: 'number' },
   'Float': { component: 'input', type: 'number' },
   'Boolean': { component: 'input', type: 'checkbox' },
-  'ID': { component: 'input', type: 'hidden' }
+  'ID': { component: 'input', type: 'hidden' },
 };
 
 const renderField = (Component: any, { input, label, inner, meta: { touched, error, warning }, ...props }: any) => (
@@ -110,7 +112,7 @@ const renderField = (Component: any, { input, label, inner, meta: { touched, err
       {touched && ((error && <span>{error}</span>) || (warning && <span>{warning}</span>))}
     </div>
   </div>
-)
+);
 
 function buildFieldsVisitor(options: VisitingContext): any {
   return {
@@ -128,7 +130,7 @@ function buildFieldsVisitor(options: VisitingContext): any {
       let props;
 
       props = scalarTypeToField[value];
-      if (!!props){
+      if (!!props) {
         return props;
       }
 
@@ -137,13 +139,13 @@ function buildFieldsVisitor(options: VisitingContext): any {
         // tslint:disable-line
         `user defined field ${value} does not correspond to any known graphql types`,
       );
-      props = resolvers && resolvers[ value ]
-      if (!!props){ // user defined type
-        return props
-      } else if ( typeDef.kind === 'EnumTypeDefinition' ){
-        const options = (typeDef as EnumTypeDefinitionNode)
-            .values.map( ({name: {value}}:EnumValueDefinitionNode) => <option key={value} value={value}>{value}</option> );
-        return { component: 'select', inner: options };
+      props = resolvers && resolvers[ value ];
+      if (!!props) { // user defined type
+        return props;
+      } else if ( typeDef.kind === 'EnumTypeDefinition' ) {
+        const inner = (typeDef as EnumTypeDefinitionNode).values.map( ({name}: EnumValueDefinitionNode) =>
+              <option key={name.value} value={name.value}>{name.value}</option> );
+        return { component: 'select', inner };
       }
 
       invariant( false,
@@ -151,11 +153,11 @@ function buildFieldsVisitor(options: VisitingContext): any {
         `not able to find a definition for type ${value}`,
       );
     },
-    NonNullType(node: NonNullTypeNode){
+    NonNullType(node: NonNullTypeNode) {
       const { type } = node;
       const props = visit(type, buildFieldsVisitor(options), {});
-      return { required:true, ...props };
-    }
+      return { required: true, ...props };
+    },
   };
 }
 
@@ -172,18 +174,18 @@ export function buildForm(
   const withForm = reduxForm({
     form: name,
     initialValues,
-    validate(values: any){
+    validate(values: any) {
       const errors: any = {};
       requiredFields.forEach( (fieldName: string) => {
-        if ( !values[fieldName] ){
-          errors[ fieldName ] = 'Required field.'
+        if ( !values[fieldName] ) {
+          errors[ fieldName ] = 'Required field.';
         }
       });
       return errors;
-    }
+    },
   });
   return withForm( class FormComponent extends React.Component<any, any> {
-    render(){
+    render() {
       const { handleSubmit, pristine, submitting, invalid, styles } = this.props;
       return (
         <form onSubmit={handleSubmit} className={styles && styles.form}>
@@ -211,13 +213,13 @@ export const initForm = (document: DocumentNode, options: InitFormOptions): any 
       loading,
       initialValues,
     };
-  }
+  },
 });
 
 export function apolloForm(
   document: DocumentNode,
-  options: ApolloReduxFormOptions = {}
-){
+  options: ApolloReduxFormOptions = {},
+) {
 
   const { onSubmit } = options;
 
@@ -228,10 +230,10 @@ export function apolloForm(
       handleSubmit: (variables: any) => {
         mutate({
           variables,
-          ... options
-        }).then(onSubmit).catch(console.log)
-      }
-    })
+          ... options,
+        }).then(onSubmit).catch(console.log);
+      },
+    }),
   });
 
   // XXX add onSubmit to Form

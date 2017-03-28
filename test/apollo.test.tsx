@@ -1,34 +1,34 @@
-import * as React from 'react'
+import * as React from 'react';
 
-import { assert, expect } from 'chai'
-import * as sinon from 'sinon'
+import { assert, expect } from 'chai';
+import * as sinon from 'sinon';
 
-import gql from 'graphql-tag'
+import gql from 'graphql-tag';
 import {
-  apolloForm
+  apolloForm,
 } from '../src/index';
 
-import { createStore, combineReducers } from 'redux'
-import { reducer as formReducer } from 'redux-form'
-import { Provider } from 'react-redux'
+import { createStore, combineReducers } from 'redux';
+import { reducer as formReducer } from 'redux-form';
+import { Provider } from 'react-redux';
 
 const reducers = {
-  form: formReducer
-}
-const reducer = combineReducers(reducers)
-const store = createStore(reducer)
+  form: formReducer,
+};
+const reducer = combineReducers(reducers);
+const store = createStore(reducer);
 
-import { render, mount } from 'enzyme'
+import { render, mount } from 'enzyme';
 
-import ApolloClient from 'apollo-client'
-import { ApolloProvider } from 'react-apollo'
-import { mockNetworkInterface } from 'apollo-test-utils'
+import ApolloClient from 'apollo-client';
+import { ApolloProvider } from 'react-apollo';
+import { mockNetworkInterface } from 'apollo-test-utils';
 
-const globalAny:any = global;
+const globalAny: any = global;
 
 // some dirty hacks following
 // http://stackoverflow.com/questions/40743131/how-to-prevent-property-does-not-exist-on-type-global-with-jsdom-and-t
-const jsdom = require('jsdom');
+const jsdom = require('jsdom'); // tslint:disable-line
 const document = jsdom.jsdom('<!doctype html><html><body></body></html>');
 globalAny.document = document;
 globalAny.window = document.defaultView;
@@ -48,16 +48,16 @@ describe('apolloForm', () => {
     const client = new ApolloClient({ networkInterface, addTypename: false });
 
     const CreatePostForm = apolloForm(query, {
-      onSubmit(response: any){
+      onSubmit(response: any) {
         expect(response).to.deep.equal({ data });
         done();
-      }
+      },
     });
 
     const wrapper = mount(
       <ApolloProvider client={client}>
         <CreatePostForm />
-      </ApolloProvider>
+      </ApolloProvider>,
     );
 
     wrapper.find('button').simulate('submit');
