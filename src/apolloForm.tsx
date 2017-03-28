@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Component } from '@types/react';
+import { Component } from '@types/react';
 
 const invariant = require('invariant');
 
@@ -19,6 +19,8 @@ import {
   GraphQLSchema,
 } from 'graphql';
 
+import { MutationOptions, QueryOptions } from 'react-apollo/lib/graphql'
+import { Config } from 'redux-form'
 
 import {
   FormDecorator,
@@ -30,83 +32,64 @@ import { Field, reduxForm } from 'redux-form'
 
 import { fromCamelToHuman } from './utils'
 
-interface TypeDefinitionsTable {
+export type OperationTypeNode = 'query' | 'mutation';
+
+export interface FormFieldResolver {
+  [key: string]: any;
+  component: string;
+}
+
+export interface FormFieldResolvers {
+  [key: string]: FormFieldResolver;
+}
+
+export type ApolloReduxFormOptions = Config<any, any, any> & MutationOptions & {
+  resolvers?: FormFieldResolvers;
+  defs?: DocumentNode;
+};
+
+interface VisitingContext {
+  resolvers?: FormFieldResolvers;
+  types: TypeDefinitions;
+}
+
+interface TypeDefinitions {
   [type: string]: TypeDefinitionNode;
 }
 
-interface IMutationDefinition {
+interface OperationSignature {
   name: string;
+  operation: OperationTypeNode;
   variables: VariableDefinitionNode[];
 }
 
-function findQuery(document: DocumentNode): IMutationDefinition {
-  let variables, name;
-  const queries = document.definitions.filter(
-    (x: DefinitionNode) => x.kind === 'OperationDefinition' && x.operation === 'query',
-  );
-  invariant((queries.length === 1),
-    // tslint:disable-line
-    `apollo-redux-form expects exactly one query`,
-  );
-  const definitions = queries;
-  const definition = definitions[0] as OperationDefinitionNode;
-  variables = definition.variableDefinitions || [];
-  let hasName = definition.name && definition.name.kind === 'Name';
-  name = hasName && definition.name ? definition.name.value : 'data';
-  return { name, variables };
-}
-
-function findTypeDefinitions(document: DocumentNode|undefined): TypeDefinitionsTable {
-  const types: TypeDefinitionsTable = {};
+function buildTypesTable(document?: DocumentNode): TypeDefinitions {
+  const types: TypeDefinitions = {};
 
   document && document.definitions.filter(
-    (x: DefinitionNode) => x.kind === 'EnumTypeDefinition' ||  x.kind === 'InputObjectTypeDefinition' || x.kind === 'ScalarTypeDefinition',
+    (x: DefinitionNode) =>
+      x.kind === 'EnumTypeDefinition' ||
+      x.kind === 'InputObjectTypeDefinition' ||
+      x.kind === 'ScalarTypeDefinition',
   ).forEach( (type: TypeDefinitionNode): void => { types[ type.name.value ] = type;});
 
   return types;
 }
 
-function parse(document: DocumentNode): IMutationDefinition {
-
+function parseOperationSignature(document: DocumentNode, operation: OperationTypeNode ): OperationSignature {
   let variables, name;
-
-  const fragments = document.definitions.filter(
-    (x: DefinitionNode) => x.kind === 'FragmentDefinition',
+  const definitions = document.definitions.filter(
+    (x: DefinitionNode) => x.kind === 'OperationDefinition' && x.operation === operation,
   );
-
-  const queries = document.definitions.filter(
-    (x: DefinitionNode) => x.kind === 'OperationDefinition' && x.operation === 'query',
-  );
-
-  const mutations = document.definitions.filter(
-    (x: DefinitionNode) => x.kind === 'OperationDefinition' && x.operation === 'mutation',
-  );
-
-  const subscriptions = document.definitions.filter(
-    (x: DefinitionNode) => x.kind === 'OperationDefinition' && x.operation === 'subscription',
-  );
-
-  invariant(!fragments.length || (queries.length || mutations.length || subscriptions.length),
-    `Passing only a fragment to 'graphql' is not yet supported. You must include a query, subscription or mutation as well`,
-  );
-  invariant(((queries.length + mutations.length + subscriptions.length) <= 1),
+  invariant((definitions.length === 1),
     // tslint:disable-line
-    `apollo-redux-form only supports a mutation per HOC. ${document} had ${queries.length} queries, ${subscriptions.length} subscriptions and ${mutations.length} muations. You can use 'compose' to join multiple operation types to a component`,
+    `apollo-redux-form expects exactly one operation definition`,
   );
-
-  const definitions = mutations;
-
-  invariant(definitions.length === 1,
-    // tslint:disable-line
-    `apollo-redux-form only supports one defintion per HOC. ${document} had ${definitions.length} definitions.`,
-  );
-
   const definition = definitions[0] as OperationDefinitionNode;
   variables = definition.variableDefinitions || [];
   let hasName = definition.name && definition.name.kind === 'Name';
   name = hasName && definition.name ? definition.name.value : 'data';
-  return { name, variables };
-
+  return { name, variables, operation };
 }
 
 const scalarTypeToField: any = {
@@ -129,7 +112,7 @@ const renderField = (Component: any, { input, label, inner, meta: { touched, err
   </div>
 )
 
-function buildFieldsVisitor(options: any): any{
+function buildFieldsVisitor(options: VisitingContext): any {
   return {
     VariableDefinition(node: VariableDefinitionNode) {
       const { variable: { name: {value} }, type } = node;
@@ -178,10 +161,10 @@ function buildFieldsVisitor(options: any): any{
 
 export function buildForm(
   document: DocumentNode,
-  {initialValues, resolvers, defs}: ApolloFormInterface = {}): any {
+  {initialValues, resolvers, defs}: ApolloReduxFormOptions = {}): any {
 
-  const { name, variables } = parse(document);
-  const types = findTypeDefinitions(defs);
+  const { name, variables } = parseOperationSignature(document, 'mutation');
+  const types = buildTypesTable(defs);
   const fields = visit(variables, buildFieldsVisitor({types, resolvers}), {});
   const requiredFields =
     variables.filter( (variable) => variable.type.kind === 'NonNullType')
@@ -203,7 +186,7 @@ export function buildForm(
     render(){
       const { handleSubmit, pristine, submitting, invalid, styles } = this.props;
       return (
-        <form onSubmit={handleSubmit} className={styles.form}>
+        <form onSubmit={handleSubmit} className={styles && styles.form}>
           {fields}
           <div>
             <button type='submit' disabled={pristine || submitting || invalid}>
@@ -216,32 +199,13 @@ export function buildForm(
   });
 }
 
-export interface FormResolver {
-  [key: string]: any;
-  component: string;
-  format?(value:string): string;
-}
+export type InitFormOptions = Object | ((props: any) => QueryOptions );
 
-export interface FormResolvers {
-  [key: string]: FormResolver;
-}
-
-// TODO it should Apollo & ReduxForm options
-export interface ApolloFormInterface {
-  initialValues?: FormData;
-  loading?: boolean;
-  resolvers?: FormResolvers;
-  onSubmit?: any;
-  defs?: DocumentNode;
-  format?: any;
-  normalize?: any;
-}
-
-export const initForm = (document: DocumentNode, options: any): any => graphql(document, {
+export const initForm = (document: DocumentNode, options: InitFormOptions): any => graphql(document, {
   options,
   props: ({ data }) => {
     const {loading, error} = data;
-    const { name } = findQuery(document);
+    const { name } = parseOperationSignature(document, 'query');
     const initialValues = data[name];
     return {
       loading,
@@ -252,10 +216,7 @@ export const initForm = (document: DocumentNode, options: any): any => graphql(d
 
 export function apolloForm(
   document: DocumentNode,
-  // apollo options e.g.
-  // * updateQueries
-  //
-  options: ApolloFormInterface = {}
+  options: ApolloReduxFormOptions = {}
 ){
 
   const { onSubmit } = options;
