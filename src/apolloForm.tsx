@@ -163,8 +163,9 @@ function buildFieldsVisitor(options: VisitingContext): any {
 
 export function buildForm(
   document: DocumentNode,
-  {initialValues, resolvers, defs}: ApolloReduxFormOptions = {}): any {
+  options: ApolloReduxFormOptions = {}): any {
 
+  const {resolvers, defs, ...rest} = options;
   const { name, variables } = parseOperationSignature(document, 'mutation');
   const types = buildTypesTable(defs);
   const fields = visit(variables, buildFieldsVisitor({types, resolvers}), {});
@@ -173,7 +174,6 @@ export function buildForm(
              .map( (variable) => variable.variable.name.value );
   const withForm = reduxForm({
     form: name,
-    initialValues,
     validate(values: any) {
       const errors: any = {};
       requiredFields.forEach( (fieldName: string) => {
@@ -183,6 +183,7 @@ export function buildForm(
       });
       return errors;
     },
+    ...rest,
   });
   return withForm( class FormComponent extends React.Component<any, any> {
     render() {
