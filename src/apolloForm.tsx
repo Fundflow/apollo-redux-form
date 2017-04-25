@@ -228,12 +228,10 @@ export function apolloForm(
     props: ({ mutate }) => ({
       // variables contains right fields
       // because form is created from mutation variables
-      handleSubmit: (variables: any) => {
-        mutate({
+      handleSubmit: (variables: any) => mutate({
           variables,
           ... options,
-        }).then(onSubmit).catch(console.log);
-      },
+        }).then(onSubmit).catch(console.log),
     }),
   });
 
