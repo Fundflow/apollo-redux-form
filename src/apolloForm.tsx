@@ -20,7 +20,7 @@ import {
 } from 'graphql';
 
 import { MutationOptions, QueryOptions } from 'react-apollo/lib/graphql';
-import { Config } from 'redux-form';
+import { Config, SubmissionError } from 'redux-form';
 
 import {
   FormDecorator,
@@ -229,7 +229,7 @@ export function apolloForm(
       handleSubmit: (variables: any) => mutate({
           variables,
           ... options,
-        }),
+        }).catch ( (error: any) => { throw new SubmissionError(error); } ),
     }),
   });
 
