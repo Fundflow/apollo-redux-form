@@ -8,15 +8,8 @@ import {
   apolloForm,
 } from '../src/index';
 
-import { createStore, combineReducers } from 'redux';
+import { Reducer, createStore, combineReducers, applyMiddleware } from 'redux';
 import { reducer as formReducer } from 'redux-form';
-import { Provider } from 'react-redux';
-
-const reducers = {
-  form: formReducer,
-};
-const reducer = combineReducers(reducers);
-const store = createStore(reducer);
 
 import { render, mount } from 'enzyme';
 
@@ -32,6 +25,9 @@ const jsdom = require('jsdom'); // tslint:disable-line
 const document = jsdom.jsdom('<!doctype html><html><body></body></html>');
 globalAny.document = document;
 globalAny.window = document.defaultView;
+globalAny.navigator = {
+  userAgent: 'node.js',
+};
 
 describe('apolloForm', () => {
 
@@ -46,7 +42,15 @@ describe('apolloForm', () => {
     const data = { createPost: { id: '123', createdAt: '2011.12.12' } };
     const networkInterface = mockNetworkInterface({ request: { query }, result: { data } });
     const client = new ApolloClient({ networkInterface, addTypename: false });
-
+    /* eslint-disable no-underscore-dangle */
+    const store = createStore(
+      combineReducers({
+        form: formReducer,
+        apollo: client.reducer() as Reducer<any>,
+      }),
+      applyMiddleware(client.middleware()),
+    );
+    /* eslint-enable */
     const CreatePostForm = apolloForm(query, {
       onSubmit(response: any) {
         expect(response).to.deep.equal({ data });
@@ -55,7 +59,7 @@ describe('apolloForm', () => {
     });
 
     const wrapper = mount(
-      <ApolloProvider client={client}>
+      <ApolloProvider client={client} store={store}>
         <CreatePostForm />
       </ApolloProvider>,
     );

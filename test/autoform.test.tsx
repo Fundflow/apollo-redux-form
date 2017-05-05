@@ -192,7 +192,6 @@ describe('a form is invalid', () => {
           createdAt
         }
       }`);
-    const handleSubmit = sinon.spy();
     const wrapper = mount(
       <Provider store={store}>
         <CreatePostForm />

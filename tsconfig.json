@@ -13,8 +13,7 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "strictNullChecks": true,
-    "jsx": "react",
-    "compileOnSave": true
+    "jsx": "react"
   },
   "files": [
     "typings.d.ts",
