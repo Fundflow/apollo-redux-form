@@ -19,14 +19,9 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@types/react": "^15.0.14",
-    "@types/redux-form": "^6.3.2",
-    "graphql": "^0.9.1",
     "invariant": "^2.2.2",
-    "react": "^15.4.2",
-    "react-apollo": "^1.2.0",
     "redux-form": "^6.5.0",
-    "react-redux": "^5.0.3"
+    "@types/redux-form": "^6.3.2"
   },
   "devDependencies": {
     "@kadira/storybook": "^2.21.0",
@@ -65,5 +60,12 @@
   },
   "optionalDependencies": {
     "@types/node": "^6.0.38"
+  },
+  "peerDependencies": {
+    "@types/react": "^15.0.14",
+    "graphql": "^0.9.1",
+    "react": "^15.4.2",
+    "react-apollo": "^1.2.0",
+    "react-redux": "^5.0.3"
   }
 }
