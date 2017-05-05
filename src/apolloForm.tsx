@@ -222,8 +222,6 @@ export function apolloForm(
   options: ApolloReduxFormOptions = {},
 ) {
 
-  const { onSubmit } = options;
-
   const withData = graphql(document, {
     props: ({ mutate }) => ({
       // variables contains right fields
@@ -231,11 +229,10 @@ export function apolloForm(
       handleSubmit: (variables: any) => mutate({
           variables,
           ... options,
-        }).then(onSubmit).catch(console.log),
+        }),
     }),
   });
 
-  // XXX add onSubmit to Form
   const Form = buildForm(document, options) as any;
 
   return withData( (props: any) => {
