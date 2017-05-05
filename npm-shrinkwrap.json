@@ -108,6 +108,7 @@
       "version": "2.0.40",
       "from": "@types/async@>=2.0.31 <3.0.0",
       "resolved": "https://registry.npmjs.org/@types/async/-/async-2.0.40.tgz",
+      "dev": true,
       "optional": true
     },
     "@types/chai": {
@@ -145,6 +146,7 @@
       "version": "0.0.34",
       "from": "@types/isomorphic-fetch@0.0.34",
       "resolved": "https://registry.npmjs.org/@types/isomorphic-fetch/-/isomorphic-fetch-0.0.34.tgz",
+      "dev": true,
       "optional": true
     },
     "@types/mocha": {
@@ -309,17 +311,20 @@
       "version": "1.2.0",
       "from": "apollo-client@>=1.0.0 <2.0.0",
       "resolved": "https://registry.npmjs.org/apollo-client/-/apollo-client-1.2.0.tgz",
+      "dev": true,
       "dependencies": {
         "@types/graphql": {
           "version": "0.9.0",
           "from": "@types/graphql@>=0.9.0 <0.10.0",
           "resolved": "https://registry.npmjs.org/@types/graphql/-/graphql-0.9.0.tgz",
+          "dev": true,
           "optional": true
         },
         "graphql-tag": {
           "version": "2.0.0",
           "from": "graphql-tag@>=2.0.0 <3.0.0",
-          "resolved": "https://registry.npmjs.org/graphql-tag/-/graphql-tag-2.0.0.tgz"
+          "resolved": "https://registry.npmjs.org/graphql-tag/-/graphql-tag-2.0.0.tgz",
+          "dev": true
         }
       }
     },
@@ -398,7 +403,8 @@
     "asap": {
       "version": "2.0.5",
       "from": "asap@>=2.0.3 <2.1.0",
-      "resolved": "https://registry.npmjs.org/asap/-/asap-2.0.5.tgz"
+      "resolved": "https://registry.npmjs.org/asap/-/asap-2.0.5.tgz",
+      "dev": true
     },
     "asn1": {
       "version": "0.2.3",
@@ -1506,7 +1512,8 @@
     "core-js": {
       "version": "1.2.7",
       "from": "core-js@>=1.0.0 <2.0.0",
-      "resolved": "https://registry.npmjs.org/core-js/-/core-js-1.2.7.tgz"
+      "resolved": "https://registry.npmjs.org/core-js/-/core-js-1.2.7.tgz",
+      "dev": true
     },
     "core-util-is": {
       "version": "1.0.2",
@@ -1569,7 +1576,8 @@
     "create-react-class": {
       "version": "15.5.2",
       "from": "create-react-class@>=15.5.2 <16.0.0",
-      "resolved": "https://registry.npmjs.org/create-react-class/-/create-react-class-15.5.2.tgz"
+      "resolved": "https://registry.npmjs.org/create-react-class/-/create-react-class-15.5.2.tgz",
+      "dev": true
     },
     "cross-spawn": {
       "version": "3.0.1",
@@ -1934,7 +1942,8 @@
     "encoding": {
       "version": "0.1.12",
       "from": "encoding@>=0.1.11 <0.2.0",
-      "resolved": "https://registry.npmjs.org/encoding/-/encoding-0.1.12.tgz"
+      "resolved": "https://registry.npmjs.org/encoding/-/encoding-0.1.12.tgz",
+      "dev": true
     },
     "enhanced-resolve": {
       "version": "0.9.1",
@@ -2155,7 +2164,8 @@
     "fbjs": {
       "version": "0.8.12",
       "from": "fbjs@>=0.8.9 <0.9.0",
-      "resolved": "https://registry.npmjs.org/fbjs/-/fbjs-0.8.12.tgz"
+      "resolved": "https://registry.npmjs.org/fbjs/-/fbjs-0.8.12.tgz",
+      "dev": true
     },
     "file-loader": {
       "version": "0.9.0",
@@ -3222,16 +3232,18 @@
     "graphql": {
       "version": "0.9.6",
       "from": "graphql@>=0.9.1 <0.10.0",
-      "resolved": "https://registry.npmjs.org/graphql/-/graphql-0.9.6.tgz"
+      "resolved": "https://registry.npmjs.org/graphql/-/graphql-0.9.6.tgz",
+      "dev": true
     },
     "graphql-anywhere": {
       "version": "3.0.1",
-      "from": "graphql-anywhere@>=3.0.1 <4.0.0",
-      "resolved": "https://registry.npmjs.org/graphql-anywhere/-/graphql-anywhere-3.0.1.tgz"
+      "from": "https://registry.npmjs.org/graphql-anywhere/-/graphql-anywhere-3.0.1.tgz",
+      "resolved": "https://registry.npmjs.org/graphql-anywhere/-/graphql-anywhere-3.0.1.tgz",
+      "dev": true
     },
     "graphql-tag": {
       "version": "1.3.2",
-      "from": "graphql-tag@>=1.3.1 <2.0.0",
+      "from": "https://registry.npmjs.org/graphql-tag/-/graphql-tag-1.3.2.tgz",
       "resolved": "https://registry.npmjs.org/graphql-tag/-/graphql-tag-1.3.2.tgz",
       "dev": true
     },
@@ -3371,7 +3383,8 @@
     "iconv-lite": {
       "version": "0.4.17",
       "from": "iconv-lite@>=0.4.13 <0.5.0",
-      "resolved": "https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.4.17.tgz"
+      "resolved": "https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.4.17.tgz",
+      "dev": true
     },
     "icss-replace-symbols": {
       "version": "1.0.2",
@@ -3634,7 +3647,8 @@
     "is-stream": {
       "version": "1.1.0",
       "from": "is-stream@>=1.0.1 <2.0.0",
-      "resolved": "https://registry.npmjs.org/is-stream/-/is-stream-1.1.0.tgz"
+      "resolved": "https://registry.npmjs.org/is-stream/-/is-stream-1.1.0.tgz",
+      "dev": true
     },
     "is-subset": {
       "version": "0.1.1",
@@ -3687,7 +3701,8 @@
     "isomorphic-fetch": {
       "version": "2.2.1",
       "from": "isomorphic-fetch@>=2.1.1 <3.0.0",
-      "resolved": "https://registry.npmjs.org/isomorphic-fetch/-/isomorphic-fetch-2.2.1.tgz"
+      "resolved": "https://registry.npmjs.org/isomorphic-fetch/-/isomorphic-fetch-2.2.1.tgz",
+      "dev": true
     },
     "isstream": {
       "version": "0.1.2",
@@ -3698,7 +3713,8 @@
     "iterall": {
       "version": "1.1.1",
       "from": "iterall@>=1.0.0 <2.0.0",
-      "resolved": "https://registry.npmjs.org/iterall/-/iterall-1.1.1.tgz"
+      "resolved": "https://registry.npmjs.org/iterall/-/iterall-1.1.1.tgz",
+      "dev": true
     },
     "jodid25519": {
       "version": "1.0.2",
@@ -3930,7 +3946,8 @@
     "lodash.flatten": {
       "version": "4.4.0",
       "from": "lodash.flatten@>=4.2.0 <5.0.0",
-      "resolved": "https://registry.npmjs.org/lodash.flatten/-/lodash.flatten-4.4.0.tgz"
+      "resolved": "https://registry.npmjs.org/lodash.flatten/-/lodash.flatten-4.4.0.tgz",
+      "dev": true
     },
     "lodash.foreach": {
       "version": "4.5.0",
@@ -3952,13 +3969,15 @@
     },
     "lodash.isequal": {
       "version": "4.5.0",
-      "from": "lodash.isequal@>=4.1.1 <5.0.0",
-      "resolved": "https://registry.npmjs.org/lodash.isequal/-/lodash.isequal-4.5.0.tgz"
+      "from": "https://registry.npmjs.org/lodash.isequal/-/lodash.isequal-4.5.0.tgz",
+      "resolved": "https://registry.npmjs.org/lodash.isequal/-/lodash.isequal-4.5.0.tgz",
+      "dev": true
     },
     "lodash.isobject": {
       "version": "3.0.2",
-      "from": "lodash.isobject@>=3.0.2 <4.0.0",
-      "resolved": "https://registry.npmjs.org/lodash.isobject/-/lodash.isobject-3.0.2.tgz"
+      "from": "https://registry.npmjs.org/lodash.isobject/-/lodash.isobject-3.0.2.tgz",
+      "resolved": "https://registry.npmjs.org/lodash.isobject/-/lodash.isobject-3.0.2.tgz",
+      "dev": true
     },
     "lodash.keys": {
       "version": "3.1.2",
@@ -3993,7 +4012,8 @@
     "lodash.pick": {
       "version": "4.4.0",
       "from": "lodash.pick@>=4.4.0 <5.0.0",
-      "resolved": "https://registry.npmjs.org/lodash.pick/-/lodash.pick-4.4.0.tgz"
+      "resolved": "https://registry.npmjs.org/lodash.pick/-/lodash.pick-4.4.0.tgz",
+      "dev": true
     },
     "lodash.reduce": {
       "version": "4.6.0",
@@ -4249,7 +4269,8 @@
     "node-fetch": {
       "version": "1.6.3",
       "from": "node-fetch@>=1.0.1 <2.0.0",
-      "resolved": "https://registry.npmjs.org/node-fetch/-/node-fetch-1.6.3.tgz"
+      "resolved": "https://registry.npmjs.org/node-fetch/-/node-fetch-1.6.3.tgz",
+      "dev": true
     },
     "node-gyp": {
       "version": "3.6.1",
@@ -4352,7 +4373,8 @@
     "object-assign": {
       "version": "4.1.1",
       "from": "object-assign@>=4.1.0 <5.0.0",
-      "resolved": "https://registry.npmjs.org/object-assign/-/object-assign-4.1.1.tgz"
+      "resolved": "https://registry.npmjs.org/object-assign/-/object-assign-4.1.1.tgz",
+      "dev": true
     },
     "object-is": {
       "version": "1.0.1",
@@ -4899,12 +4921,14 @@
     "promise": {
       "version": "7.1.1",
       "from": "promise@>=7.1.1 <8.0.0",
-      "resolved": "https://registry.npmjs.org/promise/-/promise-7.1.1.tgz"
+      "resolved": "https://registry.npmjs.org/promise/-/promise-7.1.1.tgz",
+      "dev": true
     },
     "prop-types": {
       "version": "15.5.8",
       "from": "prop-types@>=15.5.7 <16.0.0",
-      "resolved": "https://registry.npmjs.org/prop-types/-/prop-types-15.5.8.tgz"
+      "resolved": "https://registry.npmjs.org/prop-types/-/prop-types-15.5.8.tgz",
+      "dev": true
     },
     "proxy-addr": {
       "version": "1.1.4",
@@ -5000,8 +5024,9 @@
     },
     "react": {
       "version": "15.5.4",
-      "from": "react@>=15.4.2 <16.0.0",
-      "resolved": "https://registry.npmjs.org/react/-/react-15.5.4.tgz"
+      "from": "https://registry.npmjs.org/react/-/react-15.5.4.tgz",
+      "resolved": "https://registry.npmjs.org/react/-/react-15.5.4.tgz",
+      "dev": true
     },
     "react-addons-test-utils": {
       "version": "15.5.1",
@@ -5011,18 +5036,15 @@
     },
     "react-apollo": {
       "version": "1.2.0",
-      "from": "react-apollo@>=1.2.0 <2.0.0",
+      "from": "https://registry.npmjs.org/react-apollo/-/react-apollo-1.2.0.tgz",
       "resolved": "https://registry.npmjs.org/react-apollo/-/react-apollo-1.2.0.tgz",
+      "dev": true,
       "dependencies": {
-        "graphql-anywhere": {
-          "version": "3.0.1",
-          "from": "graphql-anywhere@>=3.0.0 <4.0.0",
-          "resolved": "https://registry.npmjs.org/graphql-anywhere/-/graphql-anywhere-3.0.1.tgz"
-        },
         "graphql-tag": {
           "version": "2.0.0",
           "from": "graphql-tag@>=2.0.0 <3.0.0",
-          "resolved": "https://registry.npmjs.org/graphql-tag/-/graphql-tag-2.0.0.tgz"
+          "resolved": "https://registry.npmjs.org/graphql-tag/-/graphql-tag-2.0.0.tgz",
+          "dev": true
         }
       }
     },
@@ -5048,9 +5070,9 @@
     },
     "react-dom": {
       "version": "15.5.4",
-      "from": "react-dom@>=0.14.0 <0.15.0||>=15.0.0 <16.0.0||>=15.0.0 <16.0.0",
+      "from": "https://registry.npmjs.org/react-dom/-/react-dom-15.5.4.tgz",
       "resolved": "https://registry.npmjs.org/react-dom/-/react-dom-15.5.4.tgz",
-      "optional": true
+      "dev": true
     },
     "react-fuzzy": {
       "version": "0.3.3",
@@ -5078,8 +5100,9 @@
     },
     "react-redux": {
       "version": "5.0.4",
-      "from": "react-redux@>=5.0.3 <6.0.0",
-      "resolved": "https://registry.npmjs.org/react-redux/-/react-redux-5.0.4.tgz"
+      "from": "https://registry.npmjs.org/react-redux/-/react-redux-5.0.4.tgz",
+      "resolved": "https://registry.npmjs.org/react-redux/-/react-redux-5.0.4.tgz",
+      "dev": true
     },
     "react-simple-di": {
       "version": "1.2.0",
@@ -5456,7 +5479,8 @@
     "setimmediate": {
       "version": "1.0.5",
       "from": "setimmediate@>=1.0.5 <2.0.0",
-      "resolved": "https://registry.npmjs.org/setimmediate/-/setimmediate-1.0.5.tgz"
+      "resolved": "https://registry.npmjs.org/setimmediate/-/setimmediate-1.0.5.tgz",
+      "dev": true
     },
     "setprototypeof": {
       "version": "1.0.3",
@@ -5875,7 +5899,8 @@
     "ua-parser-js": {
       "version": "0.7.12",
       "from": "ua-parser-js@>=0.7.9 <0.8.0",
-      "resolved": "https://registry.npmjs.org/ua-parser-js/-/ua-parser-js-0.7.12.tgz"
+      "resolved": "https://registry.npmjs.org/ua-parser-js/-/ua-parser-js-0.7.12.tgz",
+      "dev": true
     },
     "uglify-js": {
       "version": "2.7.5",
@@ -6236,7 +6261,8 @@
     "whatwg-fetch": {
       "version": "2.0.3",
       "from": "whatwg-fetch@>=0.10.0",
-      "resolved": "https://registry.npmjs.org/whatwg-fetch/-/whatwg-fetch-2.0.3.tgz"
+      "resolved": "https://registry.npmjs.org/whatwg-fetch/-/whatwg-fetch-2.0.3.tgz",
+      "dev": true
     },
     "whatwg-url": {
       "version": "4.7.1",
