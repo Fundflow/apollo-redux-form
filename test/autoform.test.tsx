@@ -35,6 +35,22 @@ globalAny.window = document.defaultView;
 
 describe('buildForm', () => {
 
+  it('builds a form where fields of type ID are hidden', () => {
+    const UpdatePostForm = buildForm(gql`
+      mutation updatePost($id: ID) {
+        createPost(id: $id) {
+          id
+          createdAt
+        }
+      }`);
+    const wrapper = render(
+      <Provider store={store}>
+        <UpdatePostForm />
+      </Provider>,
+    );
+    expect( wrapper.find('input[name="id"][type="hidden"]') ).to.have.length(1);
+  });
+
   it('builds a form with scalar types', () => {
     const CreatePostForm = buildForm(gql`
       mutation createPost($title: String, $isDraft: Boolean, $views: Int, $average: Float) {
