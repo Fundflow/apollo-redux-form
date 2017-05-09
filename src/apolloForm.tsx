@@ -250,7 +250,9 @@ export const initForm = (document: DocumentNode, options: InitFormOptions): any 
   props: ({ data }) => {
     const {loading, error} = data;
     const { name } = parseOperationSignature(document, 'query');
-    const initialValues = options.mapToForm ? options.mapToForm(data[name]) : data[name];
+    const result = data[name];
+    const initialValues =
+      options.mapToForm && result ? options.mapToForm(result) : result;
     return {
       loading,
       initialValues,
