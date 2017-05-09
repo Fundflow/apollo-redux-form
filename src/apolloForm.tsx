@@ -165,9 +165,11 @@ function visitWithTypeInfo(options: VisitingContext, context: any = {}) {
       const { name: { value } } = node;
 
       if ( !!scalarTypeToField[value] ) {
+        // XXX ugly
+        const isHidden = value === 'ID';
         const { component, ...props} = scalarTypeToField[value];
         return (
-          <Field key={name} name={name} label={fromCamelToHuman(name)} required={required}
+          <Field key={name} name={name} label={fromCamelToHuman(name)} required={required && !isHidden}
                  component={renderField.bind(undefined, component)} {...props} />
         );
       } else if (resolvers && !!resolvers[ value ]) {
