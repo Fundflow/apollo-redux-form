@@ -241,14 +241,16 @@ export function buildForm(
   });
 }
 
-export type InitFormOptions = Object | ((props: any) => QueryOptions );
+export type InitFormOptions = (Object | ((props: any) => QueryOptions )) & {
+  mapToForm?: (values: any) => any;
+};
 
 export const initForm = (document: DocumentNode, options: InitFormOptions): any => graphql(document, {
   options,
   props: ({ data }) => {
     const {loading, error} = data;
     const { name } = parseOperationSignature(document, 'query');
-    const initialValues = data[name];
+    const initialValues = options.mapToForm ? options.mapToForm(data[name]) : data[name];
     return {
       loading,
       initialValues,
