@@ -16,11 +16,12 @@ import {
   TypeDefinitionNode,
   EnumTypeDefinitionNode,
   EnumValueDefinitionNode,
+  InputObjectTypeDefinitionNode,
   GraphQLSchema,
 } from 'graphql';
 
 import { MutationOptions, QueryOptions } from 'react-apollo/lib/graphql';
-import { Config, SubmissionError } from 'redux-form';
+import { Config, SubmissionError, FormSection } from 'redux-form';
 
 import {
   FormDecorator,
@@ -102,61 +103,95 @@ const scalarTypeToField: any = {
   'ID': { component: 'input', type: 'hidden' },
 };
 
-const renderField = (Component: any, { input, label, inner, meta: { touched, error, warning }, ...props }: any) => (
+const renderField = (Component: any, { input, label, meta: { touched, error, warning }, ...props }: any) => (
   <div>
     <label>{label}</label>
     <div>
-      <Component {...input} placeholder={label} {...props}>
-        {inner}
-      </Component>
+      <Component {...input} placeholder={label} {...props} />
       {touched && ((error && <span>{error}</span>) || (warning && <span>{warning}</span>))}
     </div>
   </div>
 );
 
-function buildFieldsVisitor(options: VisitingContext): any {
+function visitInputTypes(context: any, options: VisitingContext) {
+  const { types, resolvers } = options;
+  const { name, required } = context;
   return {
-    VariableDefinition(node: VariableDefinitionNode) {
-      const { variable: { name: {value} }, type } = node;
-      const { component, ...props } = visit(type, buildFieldsVisitor(options), {});
+    EnumTypeDefinition(node: EnumTypeDefinitionNode) {
+      const { values } = node;
       return (
-        <Field key={value} name={value} label={fromCamelToHuman(value)}
-               component={renderField.bind(undefined, component)} {...props} />
+        <Field key={name} name={name} label={fromCamelToHuman(name)} required={required}
+             component={renderField.bind(undefined, 'select')} >
+             {values.map( ({name: {value}}: EnumValueDefinitionNode) =>
+                   <option key={value} value={value}>{value}</option> )}
+        </Field>
       );
+    },
+    InputObjectTypeDefinition(node: InputObjectTypeDefinitionNode) {
+      const { fields } = node;
+      return (
+        <FormSection name={name}>
+          { visit(fields, visitWithTypeInfo(options)) }
+        </FormSection>
+      );
+    },
+  };
+}
+
+function visitWithTypeInfo(options: VisitingContext) {
+  const { types, resolvers } = options;
+  let context: any;
+  return {
+    VariableDefinition: {
+      enter(node: VariableDefinitionNode) {
+        const { variable: { name: {value} } } = node;
+        context = {
+          name: value,
+        };
+      },
+      leave(node: VariableDefinitionNode) {
+        context = undefined;
+        return node.type;
+      },
     },
     NamedType(node: NamedTypeNode) {
-      const { types, resolvers } = options;
+      const {
+        name, required,
+      } = context;
       const { name: { value } } = node;
-      let props;
 
-      props = scalarTypeToField[value];
-      if (!!props) {
-        return props;
+      if ( !!scalarTypeToField[value] ) {
+        const { component, ...props} = scalarTypeToField[value];
+        return (
+          <Field key={name} name={name} label={fromCamelToHuman(name)} required={required}
+                 component={renderField.bind(undefined, component)} {...props} />
+        );
+      } else if (resolvers && !!resolvers[ value ]) {
+        const { component, ...props} =  resolvers[ value ];
+        if (!!props) { // user defined type
+          return (
+            <Field key={name} name={name} label={fromCamelToHuman(name)} required={required}
+                   component={renderField.bind(undefined, component)} {...props} />
+          );
+        }
+      } else if (!!types[value]) {
+        const typeDef = types[value];
+        return visit(typeDef, visitInputTypes(context, options));
+      } else {
+        invariant( false,
+          // tslint:disable-line
+          `Field ${value} has an unknown type`,
+        );
       }
-
-      const typeDef = types[value];
-      invariant( !!typeDef,
-        // tslint:disable-line
-        `user defined field ${value} does not correspond to any known graphql types`,
-      );
-      props = resolvers && resolvers[ value ];
-      if (!!props) { // user defined type
-        return props;
-      } else if ( typeDef.kind === 'EnumTypeDefinition' ) {
-        const inner = (typeDef as EnumTypeDefinitionNode).values.map( ({name}: EnumValueDefinitionNode) =>
-              <option key={name.value} value={name.value}>{name.value}</option> );
-        return { component: 'select', inner };
-      }
-
-      invariant( false,
-        // tslint:disable-line
-        `not able to find a definition for type ${value}`,
-      );
     },
-    NonNullType(node: NonNullTypeNode) {
-      const { type } = node;
-      const props = visit(type, buildFieldsVisitor(options), {});
-      return { required: true, ...props };
+    NonNullType: {
+      enter(node: NonNullTypeNode) {
+        context[ 'required' ] = true;
+      },
+      leave(node: NonNullTypeNode) {
+        delete context.required;
+        return node.type;
+      },
     },
   };
 }
@@ -168,7 +203,7 @@ export function buildForm(
   const {resolvers, defs, ...rest} = options;
   const { name, variables } = parseOperationSignature(document, 'mutation');
   const types = buildTypesTable(defs);
-  const fields = visit(variables, buildFieldsVisitor({types, resolvers}), {});
+  const fields = visit(variables, visitWithTypeInfo({types, resolvers}));
   const requiredFields =
     variables.filter( (variable) => variable.type.kind === 'NonNullType')
              .map( (variable) => variable.variable.name.value );

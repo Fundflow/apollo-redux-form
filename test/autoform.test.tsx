@@ -87,10 +87,6 @@ describe('buildForm', () => {
           createdAt
         }
       }`, {
-        resolvers: {
-          DateInput: { component: 'input', type: 'date' },
-          TextAreaInput: { component: 'textarea' },
-        },
         defs,
       });
 
