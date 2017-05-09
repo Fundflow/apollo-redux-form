@@ -72,17 +72,25 @@ describe('buildForm', () => {
 
   it('builds a form with standard input types custom inputs', () => {
     const defs = gql`
-      input DateInput {
-        value: Int
+      input AuthorInput {
+        name: String
+        createdAt: Int
       }
 
-      input TextAreaInput {
-        value: String
+      input ContentInput {
+        content: String
+        status: Status
+      }
+
+      enum Status {
+        PUBLISHED
+        DRAFT
+        DELETED
       }
     `;
     const CreatePostForm = buildForm(gql`
-      mutation createPost($title: String, $createdAt: DateInput, $content: TextAreaInput) {
-        createPost(title: $title, content: $content, createAt: $createdAt) {
+      mutation createPost($title: String, $author: AuthorInput, $content: ContentInput) {
+        createPost(title: $title, author: $author, content: $content) {
           id
           createdAt
         }
@@ -96,9 +104,11 @@ describe('buildForm', () => {
         </Provider>,
       );
 
-      expect( wrapper.find('input[name="createdAt"][type="date"]') ).to.have.length(1);
-      expect( wrapper.find('textarea[name="content"]') ).to.have.length(1);
       expect( wrapper.find('input[name="title"][type="text"]') ).to.have.length(1);
+      expect( wrapper.find('input[name="author.name"]') ).to.have.length(1);
+      expect( wrapper.find('input[name="author.createdAt"]') ).to.have.length(1);
+      expect( wrapper.find('input[name="content.content"]') ).to.have.length(1);
+      expect( wrapper.find('select[name="content.status"]') ).to.have.length(1);
   });
 
   it('builds a form with enum', () => {

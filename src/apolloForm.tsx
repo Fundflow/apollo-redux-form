@@ -17,6 +17,7 @@ import {
   EnumTypeDefinitionNode,
   EnumValueDefinitionNode,
   InputObjectTypeDefinitionNode,
+  InputValueDefinitionNode,
   GraphQLSchema,
 } from 'graphql';
 
@@ -127,30 +128,33 @@ function visitInputTypes(context: any, options: VisitingContext) {
         </Field>
       );
     },
-    InputObjectTypeDefinition(node: InputObjectTypeDefinitionNode) {
-      const { fields } = node;
-      return (
-        <FormSection name={name}>
-          { visit(fields, visitWithTypeInfo(options)) }
-        </FormSection>
-      );
+    InputObjectTypeDefinition: {
+      leave(node: InputObjectTypeDefinitionNode) {
+        const { fields } = node;
+        return (
+          <FormSection name={name} key={name}>
+            { fields }
+          </FormSection>
+        );
+      },
+    },
+    InputValueDefinition(node: InputValueDefinitionNode) {
+      const { name: { value }, type } = node;
+      return visit(type, visitWithTypeInfo(options, { name: value }));
     },
   };
 }
 
-function visitWithTypeInfo(options: VisitingContext) {
+function visitWithTypeInfo(options: VisitingContext, context: any = {}) {
   const { types, resolvers } = options;
-  let context: any;
   return {
     VariableDefinition: {
       enter(node: VariableDefinitionNode) {
         const { variable: { name: {value} } } = node;
-        context = {
-          name: value,
-        };
+        context.name = value;
       },
       leave(node: VariableDefinitionNode) {
-        context = undefined;
+        delete context.name;
         return node.type;
       },
     },
