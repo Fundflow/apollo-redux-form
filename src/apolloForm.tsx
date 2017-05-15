@@ -68,7 +68,7 @@ export type ApolloReduxFormOptions = Config<any, any, any> & MutationOptions & {
   resolvers?: FormFieldResolvers;
   defs?: DocumentNode;
   renderField?: (component: typeof React.Component, props: FieldProps) => JSX.Element;
-  renderForm?: (props: FormProps) => JSX.Element;
+  renderForm?: (fields: any, props: FormProps) => JSX.Element;
 };
 
 interface VisitingContext {
