@@ -45,14 +45,36 @@ export interface FormFieldResolvers {
   [key: string]: FormFieldResolver;
 }
 
+export interface FormProps {
+  handleSubmit: any;
+  fields: any;
+  pristine: boolean;
+  submitting: boolean;
+  invalid: boolean;
+}
+
+export interface FieldProps {
+  input: any;
+  label: string;
+  meta: {
+    touched: boolean;
+    error: string;
+    warning: string;
+  };
+  [prop: string]: any;
+}
+
 export type ApolloReduxFormOptions = Config<any, any, any> & MutationOptions & {
   resolvers?: FormFieldResolvers;
   defs?: DocumentNode;
+  renderField?: (component: typeof React.Component, props: FieldProps) => JSX.Element;
+  renderForm?: (props: FormProps) => JSX.Element;
 };
 
 interface VisitingContext {
   resolvers?: FormFieldResolvers;
   types: TypeDefinitions;
+  renderField: (component: typeof React.Component, props: FieldProps) => JSX.Element;
 }
 
 interface TypeDefinitions {
@@ -104,18 +126,40 @@ const scalarTypeToField: any = {
   'ID': { component: 'input', type: 'hidden' },
 };
 
-const renderField = (Component: any, { input, label, meta: { touched, error, warning }, ...props }: any) => (
-  <div>
-    <label>{label}</label>
+const defaultRenderField = (Component: any, props: FieldProps) => {
+  const { input, label, meta: { touched, error, warning }, ...rest } = props;
+  return (
     <div>
-      <Component {...input} placeholder={label} {...props} />
-      {touched && ((error && <span>{error}</span>) || (warning && <span>{warning}</span>))}
+      <label>{label}</label>
+      <div>
+        <Component {...input} placeholder={label} {...rest} />
+        {touched && ((error && <span>{error}</span>) || (warning && <span>{warning}</span>))}
+      </div>
     </div>
-  </div>
-);
+  );
+};
+
+const defaultRenderForm = (fields: any, props: FormProps) => {
+  const {
+    handleSubmit,
+    pristine,
+    submitting,
+    invalid,
+  } = props;
+  return (
+    <form onSubmit={handleSubmit}>
+      {fields}
+      <div>
+        <button type='submit' disabled={pristine || submitting || invalid}>
+          Submit
+        </button>
+      </div>
+    </form>
+  );
+};
 
 function visitInputTypes(context: any, options: VisitingContext) {
-  const { types, resolvers } = options;
+  const { types, resolvers, renderField } = options;
   const { name, required } = context;
   return {
     EnumTypeDefinition(node: EnumTypeDefinitionNode) {
@@ -162,6 +206,7 @@ function visitWithTypeInfo(options: VisitingContext, context: any = {}) {
       const {
         name, required,
       } = context;
+      const { renderField } = options;
       const { name: { value } } = node;
 
       if ( !!scalarTypeToField[value] ) {
@@ -209,7 +254,8 @@ export function buildForm(
   const {resolvers, defs, ...rest} = options;
   const { name, variables } = parseOperationSignature(document, 'mutation');
   const types = buildTypesTable(defs);
-  const fields = visit(variables, visitWithTypeInfo({types, resolvers}));
+  const renderField = options.renderField || defaultRenderField;
+  const fields = visit(variables, visitWithTypeInfo({types, resolvers, renderField}));
   const requiredFields =
     variables.filter( (variable) => variable.type.kind === 'NonNullType')
              .map( (variable) => variable.variable.name.value );
@@ -226,25 +272,13 @@ export function buildForm(
     },
     ...rest,
   });
-  return withForm( class FormComponent extends React.Component<any, any> {
-    render() {
-      const { handleSubmit, pristine, submitting, invalid, styles } = this.props;
-      return (
-        <form onSubmit={handleSubmit} className={styles && styles.form}>
-          {fields}
-          <div>
-            <button type='submit' disabled={pristine || submitting || invalid}>
-              Submit
-            </button>
-          </div>
-        </form>
-      );
-    }
-  });
+  const renderFn = options.renderForm || defaultRenderForm;
+  return withForm(renderFn.bind(undefined, fields));
 }
 
 export type InitFormOptions = (Object | ((props: any) => QueryOptions )) & {
   mapToForm?: (values: any) => any;
+  [key: string]: any;
 };
 
 export const initForm = (document: DocumentNode, options: InitFormOptions): any => graphql(document, {
