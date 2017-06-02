@@ -19,9 +19,10 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@types/redux-form": "^6.3.2",
     "invariant": "^2.2.2",
-    "redux-form": "6.5.0",
-    "@types/redux-form": "^6.3.2"
+    "lodash": "https://registry.npmjs.org/lodash/-/lodash-4.17.4.tgz",
+    "redux-form": "6.5.0"
   },
   "devDependencies": {
     "@kadira/storybook": "^2.21.0",

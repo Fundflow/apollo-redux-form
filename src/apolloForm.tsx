@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Component } from '@types/react';
 
+const _ = require('lodash'); // tslint:disable-line
 const invariant = require('invariant'); // tslint:disable-line
 
 import {
@@ -285,12 +286,31 @@ export function apolloForm(
   options: ApolloReduxFormOptions = {},
 ) {
 
+  const removeNotRegistredField = (variables: any, registeredFields: any, path: string[] = []) => {
+    for (let key in variables) {
+      const value = variables[key];
+      path.push(key);
+      if (_.isObject(value)) {
+        variables[key] = removeNotRegistredField(value, registeredFields, path);
+      } else {
+        if (!registeredFields[path.join('.')]) {
+          delete variables[key];
+        }
+      }
+      path.pop();
+    }
+    return variables;
+  };
+
   const withData = graphql(document, {
     props: ({ mutate }) => ({
-      // variables contains right fields
-      // because form is created from mutation variables
-      handleSubmit: (variables: any) => mutate({
-          variables,
+      // Since react-redux 6 forms can be initialized with arbitrary values.
+      // On submit all values are sent and not only those matching registeredFields.
+      // In general it is a problem with Apollo mutations because they expect only registred fields.
+      // Hence, we need to prune spurious values.
+      // see https://github.com/erikras/redux-form/issues/1453
+      handleSubmit: (variables: any, dispatch: void, props: any) => mutate({
+          variables: removeNotRegistredField(variables, props.registeredFields),
           ... options,
         }).catch ( (error: any) => { throw new SubmissionError(error); } ),
     }),

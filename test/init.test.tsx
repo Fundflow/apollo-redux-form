@@ -124,4 +124,68 @@ describe('initForm', () => {
     }, 500);
   });
 
+  it('executes mutation on submit and removes spurious fields', (done: any) => {
+    const schema = gql`
+      input AuthorInput {
+        name: String
+        createdAt: Int
+      }
+    `;
+    const createQuery = gql`
+      mutation createPost($title: String, $author: AuthorInput) {
+        createPost(title: $title, author: $author) {
+          id
+          createdAt
+        }
+      }`;
+    const initialValues = {
+      title: 'This is a title',
+      spurious: true,
+      author: {
+        name: 'This is a name',
+        createdAt: 0,
+        spurious: true,
+      },
+    };
+    const mutationVariables = {
+      title: 'This is a title',
+      author: {
+        name: 'This is a name',
+        createdAt: 0,
+      },
+    };
+    const resultData = { createPost: { id: '123', createdAt: '2011.12.12' } };
+    const networkInterface = mockNetworkInterface({
+      request: { query: createQuery, variables: mutationVariables },
+      result: { data: resultData },
+    });
+    const client = new ApolloClient({ networkInterface, addTypename: false });
+    /* eslint-disable no-underscore-dangle */
+    const store = createStore(
+      combineReducers({
+        form: formReducer,
+        apollo: client.reducer() as Reducer<any>,
+      }),
+      applyMiddleware(client.middleware()),
+    );
+    /* eslint-enable */
+    const CreatePostForm = apolloForm(createQuery, {
+      schema,
+      onSubmitSuccess(response: any) {
+        expect(response).to.deep.equal({ data: resultData });
+        done();
+      },
+    });
+
+    const wrapper = mount(
+      <ApolloProvider client={client} store={store}>
+        <CreatePostForm initialValues={initialValues} />
+      </ApolloProvider>,
+    );
+
+    wrapper.find('button').simulate('submit');
+
+
+  });
+
 });

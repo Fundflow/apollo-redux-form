@@ -1,6 +1,6 @@
 {
   "name": "apollo-redux-form",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "dependencies": {
     "@kadira/react-split-pane": {
       "version": "1.4.7",
@@ -3895,7 +3895,7 @@
     },
     "lodash": {
       "version": "4.17.4",
-      "from": "lodash@>=4.2.1 <5.0.0",
+      "from": "https://registry.npmjs.org/lodash/-/lodash-4.17.4.tgz",
       "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.17.4.tgz"
     },
     "lodash-es": {
