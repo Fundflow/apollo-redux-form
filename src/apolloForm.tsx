@@ -135,8 +135,6 @@ const defaultRenderForm = (fields: any, props: FormProps) => {
   );
 };
 
-// XXX can I do this better?
-export type ScalarTypeNode = 'ID' | 'String' | 'Int' | 'Float' | 'Boolean';
 export const isScalar = (name: string) =>
   ['ID', 'String', 'Int', 'Float', 'Boolean'].some( (x: string) => x === name );
 
