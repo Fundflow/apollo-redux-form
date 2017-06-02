@@ -7,6 +7,7 @@ import * as moment from 'moment';
 
 import gql from 'graphql-tag';
 import {
+  FieldProps,
   apolloForm,
   buildForm,
   initForm,
@@ -34,6 +35,31 @@ globalAny.document = document;
 globalAny.window = document.defaultView;
 
 describe('buildForm', () => {
+
+  it('builds a form with custom fields for default scalar types', () => {
+    const UpdatePostForm = buildForm(gql`
+      mutation updatePost($title: String, $isDraft: Boolean) {
+        createPost(title: $title, isDraft: $isDraft) {
+          id
+          createdAt
+        }
+      }`, {
+        renderers: {
+          String: (props: FieldProps) => {
+            const { input, label, meta: { touched, error, warning }, ...rest } = props;
+            return (
+              <div id='myCustomField' data-desc='A fully customized field'></div>
+            );
+          },
+        },
+      });
+    const wrapper = render(
+      <Provider store={store}>
+        <UpdatePostForm />
+      </Provider>,
+    );
+    expect( wrapper.find('div[data-desc="A fully customized field"]') ).to.have.length(1);
+  });
 
   it('builds a form where fields of type ID are hidden', () => {
     const UpdatePostForm = buildForm(gql`
@@ -71,7 +97,7 @@ describe('buildForm', () => {
   });
 
   it('builds a form with standard input types custom inputs', () => {
-    const defs = gql`
+    const schema = gql`
       input AuthorInput {
         name: String
         createdAt: Int
@@ -95,7 +121,7 @@ describe('buildForm', () => {
           createdAt
         }
       }`, {
-        defs,
+        schema,
       });
 
       const wrapper = render(
@@ -112,7 +138,7 @@ describe('buildForm', () => {
   });
 
   it('builds a form with enum', () => {
-    const defs = gql`
+    const schema = gql`
       enum State {
         NOT_FOUND
         ACTIVE
@@ -127,7 +153,7 @@ describe('buildForm', () => {
           createdAt
         }
       }`;
-    const CreatePostForm = buildForm(query, {defs});
+    const CreatePostForm = buildForm(query, {schema});
 
       const wrapper = render(
         <Provider store={store}>
@@ -143,13 +169,24 @@ describe('buildForm', () => {
   });
 
   it('builds a form with required fields', () => {
+    const schema = gql`
+      input AuthorInput {
+        name: String
+        createdAt: Int
+      }
+
+      input ContentInput {
+        content: String!
+        status: Int
+      }
+    `;
     const CreatePostForm = buildForm(gql`
-      mutation createPost($title: String!, $isDraft: Boolean ) {
+      mutation createPost($title: String!, $isDraft: Boolean, $author: AuthorInput!, $content: ContentInput ) {
         createPost(title: $title, isDraft: $isDraft) {
           id
           createdAt
         }
-      }`);
+      }`, {schema});
       const wrapper = render(
         <Provider store={store}>
           <CreatePostForm />
@@ -157,10 +194,17 @@ describe('buildForm', () => {
       );
       expect( wrapper.find('input[name="title"][type="text"][required]') ).to.have.length(1);
       expect( wrapper.find('input[name="isDraft"][type="checkbox"]') ).to.have.length(1);
+      expect( wrapper.find('input[name="isDraft"][type="checkbox"][required]') ).to.have.length(0);
+      expect( wrapper.find('input[name="author.name"][type="text"][required]') ).to.have.length(1);
+      expect( wrapper.find('input[name="author.createdAt"][type="number"][required]') ).to.have.length(1);
+      expect( wrapper.find('input[name="content.content"][type="text"][required]') ).to.have.length(1);
+      expect( wrapper.find('input[name="content.status"][type="number"]') ).to.have.length(1);
+      expect( wrapper.find('input[name="content.status"][type="number"][required]') ).to.have.length(0);
+
   });
 
   it('builds a form with custom scalar types', (done: any) => {
-    const defs = gql`
+    const schema = gql`
       scalar Date
     `;
     const CreatePostForm = buildForm(gql`
@@ -170,15 +214,25 @@ describe('buildForm', () => {
           createdAt
         }
       }`, {
-        resolvers: {
+        renderers: {
           Date: {
-            component: 'input',
-            type: 'date',
+            render: (props: FieldProps) => {
+              const { input, label, meta: { touched, error, warning }, ...rest } = props;
+              return (
+                <div>
+                  <label>{label}</label>
+                  <div>
+                    <input type='date' {...input} placeholder={label} {...rest} />
+                    {touched && ((error && <span>{error}</span>) || (warning && <span>{warning}</span>))}
+                  </div>
+                </div>
+              );
+            },
             format: (value: string) => moment(value).format('YYYY-MM-DD'),
             normalize: (value: string) => moment(value, 'YYYY-MM-DD').toDate().getTime(),
           },
         },
-        defs,
+        schema,
       });
       const createdAt = Date.now();
       const formattedTime = moment(createdAt).format('YYYY-MM-DD');

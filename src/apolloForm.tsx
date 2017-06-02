@@ -5,6 +5,7 @@ const invariant = require('invariant'); // tslint:disable-line
 
 import {
   visit,
+  ASTNode,
   DocumentNode,
   DefinitionNode,
   VariableDefinitionNode,
@@ -18,11 +19,13 @@ import {
   EnumValueDefinitionNode,
   InputObjectTypeDefinitionNode,
   InputValueDefinitionNode,
+  ScalarTypeDefinitionNode,
   GraphQLSchema,
 } from 'graphql';
 
 import { MutationOptions, QueryOptions } from 'react-apollo/lib/graphql';
 import { Config, SubmissionError, FormSection } from 'redux-form';
+import { BaseFieldProps } from '@types/redux-form/lib/Field';
 
 import {
   FormDecorator,
@@ -30,19 +33,21 @@ import {
 } from '@types/redux-form';
 
 import { graphql } from 'react-apollo';
-import { Field, reduxForm } from 'redux-form';
+import { reduxForm } from 'redux-form';
 
-import { fromCamelToHuman } from './utils';
+import validate from './validation';
+import { FormBuilder } from './render';
 
 export type OperationTypeNode = 'query' | 'mutation';
 
-export interface FormFieldResolver {
-  [key: string]: any;
-  component: string;
-}
+export type FormFieldRenderFunction = (props: FieldProps) => JSX.Element;
 
-export interface FormFieldResolvers {
-  [key: string]: FormFieldResolver;
+export type FormFieldRenderer = {
+  render: FormFieldRenderFunction;
+} & BaseFieldProps;
+
+export interface FormFieldRenderers {
+  [key: string]: FormFieldRenderFunction | FormFieldRenderer;
 }
 
 export interface FormProps {
@@ -65,17 +70,10 @@ export interface FieldProps {
 }
 
 export type ApolloReduxFormOptions = Config<any, any, any> & MutationOptions & {
-  resolvers?: FormFieldResolvers;
-  defs?: DocumentNode;
-  renderField?: (component: typeof React.Component, props: FieldProps) => JSX.Element;
+  renderers?: FormFieldRenderers;
+  schema?: DocumentNode;
   renderForm?: (fields: any, props: FormProps) => JSX.Element;
 };
-
-interface VisitingContext {
-  resolvers?: FormFieldResolvers;
-  types: TypeDefinitions;
-  renderField: (component: typeof React.Component, props: FieldProps) => JSX.Element;
-}
 
 interface TypeDefinitions {
   [type: string]: TypeDefinitionNode;
@@ -118,27 +116,6 @@ function parseOperationSignature(document: DocumentNode, operation: OperationTyp
   return { name, variables, operation };
 }
 
-const scalarTypeToField: any = {
-  'String': { component: 'input', type: 'text' },
-  'Int': { component: 'input', type: 'number' },
-  'Float': { component: 'input', type: 'number' },
-  'Boolean': { component: 'input', type: 'checkbox' },
-  'ID': { component: 'input', type: 'hidden' },
-};
-
-const defaultRenderField = (Component: any, props: FieldProps) => {
-  const { input, label, meta: { touched, error, warning }, ...rest } = props;
-  return (
-    <div>
-      <label>{label}</label>
-      <div>
-        <Component {...input} placeholder={label} {...rest} />
-        {touched && ((error && <span>{error}</span>) || (warning && <span>{warning}</span>))}
-      </div>
-    </div>
-  );
-};
-
 const defaultRenderForm = (fields: any, props: FormProps) => {
   const {
     handleSubmit,
@@ -158,89 +135,107 @@ const defaultRenderForm = (fields: any, props: FormProps) => {
   );
 };
 
-function visitInputTypes(context: any, options: VisitingContext) {
-  const { types, resolvers, renderField } = options;
-  const { name, required } = context;
-  return {
-    EnumTypeDefinition(node: EnumTypeDefinitionNode) {
-      const { values } = node;
-      return (
-        <Field key={name} name={name} label={fromCamelToHuman(name)} required={required}
-             component={renderField.bind(undefined, 'select')} >
-             {values.map( ({name: {value}}: EnumValueDefinitionNode) =>
-                   <option key={value} value={value}>{value}</option> )}
-        </Field>
-      );
-    },
-    InputObjectTypeDefinition: {
-      leave(node: InputObjectTypeDefinitionNode) {
-        const { fields } = node;
-        return (
-          <FormSection name={name} key={name}>
-            { fields }
-          </FormSection>
-        );
-      },
-    },
-    InputValueDefinition(node: InputValueDefinitionNode) {
-      const { name: { value }, type } = node;
-      return visit(type, visitWithTypeInfo(options, { name: value }));
-    },
-  };
+// XXX can I do this better?
+export type ScalarTypeNode = 'ID' | 'String' | 'Int' | 'Float' | 'Boolean';
+export const isScalar = (name: string) =>
+  ['ID', 'String', 'Int', 'Float', 'Boolean'].some( (x: string) => x === name );
+
+class VisitingContext {
+  private types: TypeDefinitions;
+  private renderers: FormFieldRenderers;
+  constructor(types: TypeDefinitions, renderers: FormFieldRenderers = {}) {
+    this.types = types;
+    this.renderers = renderers;
+  }
+  resolveType(typeName: string): TypeDefinitionNode | undefined {
+    return this.types[typeName];
+  }
+  resolveRenderer(typeName: string): FormFieldRenderFunction | FormFieldRenderer | undefined {
+    return this.renderers[typeName];
+  }
 }
 
-function visitWithTypeInfo(options: VisitingContext, context: any = {}) {
-  const { types, resolvers } = options;
+function visitWithContext(context: VisitingContext, forceRequired: boolean = false) {
+  const builder: FormBuilder = new FormBuilder();
+  const path: string[] = [];
+  let required: boolean = forceRequired;
   return {
     VariableDefinition: {
       enter(node: VariableDefinitionNode) {
         const { variable: { name: {value} } } = node;
-        context.name = value;
+        path.push(value);
       },
       leave(node: VariableDefinitionNode) {
-        delete context.name;
+        path.pop();
         return node.type;
       },
     },
     NamedType(node: NamedTypeNode) {
-      const {
-        name, required,
-      } = context;
-      const { renderField } = options;
-      const { name: { value } } = node;
+      const { name: { value: typeName } } = node;
+      const fullPath = path.join('.');
+      const type = context.resolveType(typeName);
 
-      if ( !!scalarTypeToField[value] ) {
-        // XXX ugly
-        const isHidden = value === 'ID';
-        const { component, ...props} = scalarTypeToField[value];
-        return (
-          <Field key={name} name={name} label={fromCamelToHuman(name)} required={required && !isHidden}
-                 component={renderField.bind(undefined, component)} {...props} />
-        );
-      } else if (resolvers && !!resolvers[ value ]) {
-        const { component, ...props} =  resolvers[ value ];
-        if (!!props) { // user defined type
-          return (
-            <Field key={name} name={name} label={fromCamelToHuman(name)} required={required}
-                   component={renderField.bind(undefined, component)} {...props} />
+      if ( isScalar(typeName) ) {
+        const renderer = context.resolveRenderer(typeName);
+        if (renderer) {
+          return builder.createCustomField(fullPath, typeName, renderer, required);
+        } else {
+          return builder.createInputField(fullPath, typeName, required);
+        }
+      } else {
+        if (type) {
+          switch ( type.kind ) {
+            case 'InputObjectTypeDefinition':
+              const children = visit(type.fields, visitWithContext(context, required));
+              return builder.createFormSection(fullPath, children);
+            case 'EnumTypeDefinition':
+              const options = type.values.map(
+                ({name: {value}}: EnumValueDefinitionNode) => ({key: value, value}),
+              );
+              return builder.createSelectField(fullPath, typeName, options, required);
+            case 'ScalarTypeDefinition':
+              const renderer = context.resolveRenderer(typeName);
+              if (renderer) {
+                return builder.createCustomField(fullPath, typeName, renderer, required);
+              } else {
+                invariant( false,
+                  // tslint:disable-line
+                  `Type ${typeName} does not have a default renderer, see ${fullPath}`,
+                );
+              }
+              break;
+            default:
+              invariant( false,
+                // tslint:disable-line
+                `Type ${type.kind} is not handled yet, see ${fullPath}`,
+              );
+          }
+        } else {
+          invariant( false,
+            // tslint:disable-line
+            `Type ${typeName} is unknown for property ${fullPath}`,
           );
         }
-      } else if (!!types[value]) {
-        const typeDef = types[value];
-        return visit(typeDef, visitInputTypes(context, options));
-      } else {
-        invariant( false,
-          // tslint:disable-line
-          `Field ${value} has an unknown type`,
-        );
       }
+
+      return;
     },
     NonNullType: {
       enter(node: NonNullTypeNode) {
-        context[ 'required' ] = true;
+        required = true;
       },
       leave(node: NonNullTypeNode) {
-        delete context.required;
+        required = forceRequired;
+        return node.type;
+      },
+    },
+    InputValueDefinition: {
+      enter(node: InputValueDefinitionNode) {
+        const { name: { value }, type } = node;
+        path.push(value);
+      },
+      leave(node: InputValueDefinitionNode) {
+        path.pop();
         return node.type;
       },
     },
@@ -251,25 +246,16 @@ export function buildForm(
   document: DocumentNode,
   options: ApolloReduxFormOptions = {}): any {
 
-  const {resolvers, defs, ...rest} = options;
+  const {renderers, schema, ...rest} = options;
   const { name, variables } = parseOperationSignature(document, 'mutation');
-  const types = buildTypesTable(defs);
-  const renderField = options.renderField || defaultRenderField;
-  const fields = visit(variables, visitWithTypeInfo({types, resolvers, renderField}));
-  const requiredFields =
-    variables.filter( (variable) => variable.type.kind === 'NonNullType')
-             .map( (variable) => variable.variable.name.value );
+  const types = buildTypesTable(schema);
+
+  const context = new VisitingContext(types, renderers);
+  const fields = visit(variables, visitWithContext(context));
+
   const withForm = reduxForm({
     form: name,
-    validate(values: any) {
-      const errors: any = {};
-      requiredFields.forEach( (fieldName: string) => {
-        if ( !values[fieldName] ) {
-          errors[ fieldName ] = 'Required field.';
-        }
-      });
-      return errors;
-    },
+    validate: validate.bind(undefined, fields),
     ...rest,
   });
   const renderFn = options.renderForm || defaultRenderForm;

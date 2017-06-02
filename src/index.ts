@@ -2,12 +2,14 @@ import {
   apolloForm,
   buildForm,
   initForm,
-  formProps,
-  fieldProps,
+  FormProps,
+  FieldProps,
 } from './apolloForm';
 
 export {
   apolloForm,
   buildForm,
   initForm,
+  FormProps,
+  FieldProps,
 }
