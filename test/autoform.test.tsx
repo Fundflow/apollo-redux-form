@@ -61,6 +61,45 @@ describe('buildForm', () => {
     expect( wrapper.find('div[data-desc="A fully customized field"]') ).to.have.length(1);
   });
 
+  it('builds a form with custom selects', () => {
+    const schema = gql`
+      enum Status {
+        PUBLISHED
+        DRAFT
+        DELETED
+      }
+    `;
+    const UpdatePostForm = buildForm(gql`
+      mutation updatePost($status: Status) {
+        createPost(status: $status) {
+          id
+          createdAt
+        }
+      }`, {
+        schema,
+        renderers: {
+          Status: (props: FieldProps) => {
+            const { input, label, options, meta: { touched, error, warning }, ...rest } = props;
+            return (
+              <ul>
+                {
+                  options.map( (opt: any) => <li key={opt.key} data-key={opt.key}>{opt.value}</li> )
+                }
+              </ul>
+            );
+          },
+        },
+      });
+    const wrapper = render(
+      <Provider store={store}>
+        <UpdatePostForm />
+      </Provider>,
+    );
+    expect( wrapper.find('li[data-key="PUBLISHED"]') ).to.have.length(1);
+    expect( wrapper.find('li[data-key="DRAFT"]') ).to.have.length(1);
+    expect( wrapper.find('li[data-key="DELETED"]') ).to.have.length(1);
+  });
+
   it('builds a form where fields of type ID are hidden', () => {
     const UpdatePostForm = buildForm(gql`
       mutation updatePost($id: ID) {

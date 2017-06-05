@@ -1,15 +1,23 @@
 import * as React from 'react';
 
 import { Field, FormSection } from 'redux-form';
+import { BaseFieldProps } from '@types/redux-form/lib/Field';
 
 import {
-  FormFieldRenderers,
-  FormFieldRenderer,
-  FormFieldRenderFunction,
   FieldProps,
   isScalar,
 } from './apolloForm';
 import { fromCamelToHuman } from './utils';
+
+export type FormFieldRenderFunction =  (props: FieldProps) => JSX.Element;
+
+export type FormFieldRenderer = {
+  render: FormFieldRenderFunction;
+} & BaseFieldProps;
+
+export interface FormFieldRenderers {
+  [key: string]: FormFieldRenderFunction | FormFieldRenderer;
+}
 
 const defaultRenderField = (Component: any, type: string) => (props: FieldProps) => {
   const { input, label, meta: { touched, error, warning }, ...rest } = props;
@@ -32,13 +40,14 @@ const defaultHiddenField = (props: FieldProps) => {
 };
 
 const defaultRenderSelectField = (props: FieldProps) => {
-  const { input, label, children, meta: { touched, error, warning }, ...rest } = props;
+  const { input, label, options, meta: { touched, error, warning }, ...rest } = props;
   return (
     <div>
       <label>{label}</label>
       <div>
         <select {...input} {...rest} >
-          {children}
+          {options.map( ({key, value}) =>
+              <option key={key} value={value}>{value}</option> )}
         </select>
         {touched && ((error && <span>{error}</span>) || (warning && <span>{warning}</span>))}
       </div>
@@ -54,18 +63,15 @@ const defaultFieldRenderers: FormFieldRenderers = {
   'ID': defaultHiddenField,
 };
 
-function isRenderFunction(x: FormFieldRenderFunction | FormFieldRenderer): x is FormFieldRenderFunction {
-  return (x as FormFieldRenderer).render === undefined;
-}
-
 export interface SelectOption {
   key: string;
   value: string;
 }
 
 export class FormBuilder {
-  createInputField(name: string, type: string, required?: boolean) {
-    const renderer = defaultFieldRenderers[ type ];
+  createInputField(renderer: FormFieldRenderer, name: string, type: string, required?: boolean) {
+    const { render, ...rest } = renderer;
+    const renderFn = render || defaultFieldRenderers[ type ];
     const hidden = type === 'ID';
     return (
       <Field
@@ -73,7 +79,8 @@ export class FormBuilder {
         name={name}
         label={fromCamelToHuman(name)}
         required={required && !hidden}
-        component={renderer}
+        component={renderFn}
+        {...rest}
       />
     );
   }
@@ -84,28 +91,12 @@ export class FormBuilder {
       </FormSection>
     );
   }
-  createSelectField(name: string, type: string, options: SelectOption[], required?: boolean) {
+  createSelectField(renderer: FormFieldRenderer, name: string, type: string, options: SelectOption[], required?: boolean) {
+    const { render, ...rest } = renderer;
+    const renderFn = render || defaultRenderSelectField;
     return (
       <Field key={name} name={name} label={fromCamelToHuman(name)} required={required}
-             component={defaultRenderSelectField} >
-           {options.map( ({key, value}) =>
-                 <option key={key} value={value}>{value}</option> )}
-      </Field>
+             component={renderFn} options={options} {...rest} />
     );
-  }
-  createCustomField(name: string, type: string, renderer: FormFieldRenderFunction | FormFieldRenderer, required?: boolean) {
-    if ( isRenderFunction(renderer) ) {
-      return (
-        <Field key={name} name={name} label={fromCamelToHuman(name)} required={required}
-               component={renderer} />
-      );
-    } else {
-      const { render, ...rest} = renderer;
-      return (
-        <Field key={name} name={name} required={required}
-               label={fromCamelToHuman(name)}
-               component={render} {...rest} />
-      );
-    }
   }
 }

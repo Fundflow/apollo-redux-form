@@ -26,7 +26,6 @@ import {
 
 import { MutationOptions, QueryOptions } from 'react-apollo/lib/graphql';
 import { Config, SubmissionError, FormSection } from 'redux-form';
-import { BaseFieldProps } from '@types/redux-form/lib/Field';
 
 import {
   FormDecorator,
@@ -37,19 +36,14 @@ import { graphql } from 'react-apollo';
 import { reduxForm } from 'redux-form';
 
 import validate from './validation';
-import { FormBuilder } from './render';
+import {
+  FormBuilder,
+  FormFieldRenderer,
+  FormFieldRenderers,
+  FormFieldRenderFunction,
+} from './render';
 
 export type OperationTypeNode = 'query' | 'mutation';
-
-export type FormFieldRenderFunction = (props: FieldProps) => JSX.Element;
-
-export type FormFieldRenderer = {
-  render: FormFieldRenderFunction;
-} & BaseFieldProps;
-
-export interface FormFieldRenderers {
-  [key: string]: FormFieldRenderFunction | FormFieldRenderer;
-}
 
 export interface FormProps {
   handleSubmit: any;
@@ -139,6 +133,10 @@ const defaultRenderForm = (fields: any, props: FormProps) => {
 export const isScalar = (name: string) =>
   ['ID', 'String', 'Int', 'Float', 'Boolean'].some( (x: string) => x === name );
 
+function isRenderFunction(x: FormFieldRenderFunction | FormFieldRenderer): x is FormFieldRenderFunction {
+  return x === undefined || (x as FormFieldRenderer).render === undefined;
+}
+
 class VisitingContext {
   private types: TypeDefinitions;
   private renderers: FormFieldRenderers;
@@ -149,8 +147,9 @@ class VisitingContext {
   resolveType(typeName: string): TypeDefinitionNode | undefined {
     return this.types[typeName];
   }
-  resolveRenderer(typeName: string): FormFieldRenderFunction | FormFieldRenderer | undefined {
-    return this.renderers[typeName];
+  resolveRenderer(typeName: string): FormFieldRenderer {
+    const render = this.renderers[typeName];
+    return isRenderFunction(render) ? {render} : render;
   }
 }
 
@@ -173,14 +172,10 @@ function visitWithContext(context: VisitingContext, forceRequired: boolean = fal
       const { name: { value: typeName } } = node;
       const fullPath = path.join('.');
       const type = context.resolveType(typeName);
+      const renderer = context.resolveRenderer(typeName);
 
       if ( isScalar(typeName) ) {
-        const renderer = context.resolveRenderer(typeName);
-        if (renderer) {
-          return builder.createCustomField(fullPath, typeName, renderer, required);
-        } else {
-          return builder.createInputField(fullPath, typeName, required);
-        }
+        return builder.createInputField(renderer, fullPath, typeName, required);
       } else {
         if (type) {
           switch ( type.kind ) {
@@ -191,11 +186,10 @@ function visitWithContext(context: VisitingContext, forceRequired: boolean = fal
               const options = type.values.map(
                 ({name: {value}}: EnumValueDefinitionNode) => ({key: value, value}),
               );
-              return builder.createSelectField(fullPath, typeName, options, required);
+              return builder.createSelectField(renderer, fullPath, typeName, options, required);
             case 'ScalarTypeDefinition':
-              const renderer = context.resolveRenderer(typeName);
-              if (renderer) {
-                return builder.createCustomField(fullPath, typeName, renderer, required);
+              if (renderer.render !== undefined) {
+                return builder.createInputField(renderer, fullPath, typeName, required);
               } else {
                 invariant( false,
                   // tslint:disable-line
