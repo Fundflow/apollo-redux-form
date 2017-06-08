@@ -281,19 +281,23 @@ export function apolloForm(
 ) {
 
   const removeNotRegistredField = (variables: any, registeredFields: any, path: string[] = []) => {
+    const result: any = {};
     for (let key in variables) {
       const value = variables[key];
       path.push(key);
       if (_.isObject(value)) {
-        variables[key] = removeNotRegistredField(value, registeredFields, path);
+        const pruned = removeNotRegistredField(value, registeredFields, path);
+        if (!_.isEmpty(pruned)) {
+          result[key] = pruned;
+        }
       } else {
-        if (!registeredFields[path.join('.')]) {
-          delete variables[key];
+        if (registeredFields[path.join('.')]) {
+          result[key] = variables[key];
         }
       }
       path.pop();
     }
-    return variables;
+    return result;
   };
 
   const withData = graphql(document, {
