@@ -1,6 +1,7 @@
 yarn.lock
 
 lib
+dist
 
 # Typescript
 typings

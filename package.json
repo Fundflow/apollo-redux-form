@@ -6,6 +6,7 @@
   "typings": "./lib/src/index.d.ts",
   "types": "./lib/src/index.d.ts",
   "scripts": {
+    "release": "./scripts/release.sh",
     "compile": "tsc",
     "watch": "tsc -w",
     "pretest": "npm run compile",
@@ -13,8 +14,7 @@
     "posttest": "npm run lint",
     "lint": "tslint 'src/*.ts*' && tslint 'test/*.ts*'",
     "storybook": "start-storybook -p 6006",
-    "build-storybook": "build-storybook",
-    "postinstall": "tsc -p tsconfig-prod.json"
+    "build-storybook": "build-storybook"
   },
   "author": "",
   "license": "MIT",
