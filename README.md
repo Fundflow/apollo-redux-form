@@ -54,13 +54,6 @@ $ yarn run storybook
 // point your browser to http://localhost:6006/
 ```
 
-## Roadmap
-
-* handle errors
-* custom component, e.g. slider instead of checkbox
-* be more specific with types, e.g. replace "any" with better type
-* ...
-
 ## References
 
 * [GraphQL AST](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/graphql/language/ast.d.ts)
