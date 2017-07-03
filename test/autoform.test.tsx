@@ -145,6 +145,7 @@ describe('buildForm', () => {
       input ContentInput {
         content: String
         status: Status
+        more: AuthorInput
       }
 
       enum Status {
@@ -300,13 +301,19 @@ describe('buildForm', () => {
 describe('a form is invalid', () => {
 
   it('iff required fields are missing', () => {
+    const schema = gql`
+      input AuthorInput {
+        name: String!
+        createdAt: Int
+      }
+    `;
     const CreatePostForm = buildForm(gql`
-      mutation createPost($title: String!, $isDraft: Boolean ) {
+      mutation createPost($title: String!, $isDraft: Boolean, $author: AuthorInput ) {
         createPost(title: $title, isDraft: $isDraft) {
           id
           createdAt
         }
-      }`);
+      }`, {schema});
     const wrapper = mount(
       <Provider store={store}>
         <CreatePostForm />
@@ -316,9 +323,24 @@ describe('a form is invalid', () => {
 
     state = store.getState();
     errors = state['form']['createPost']['syncErrors'];
-    expect(errors).to.deep.equal({ title: 'Required field.' });
+    expect(errors).to.deep.equal({
+      title: 'Required field.',
+      author: {
+        name: 'Required field.',
+      },
+    });
 
-    wrapper.find('input').first().simulate('change', { target: { value: 'A new required title' } });
+    wrapper.find('input[name="title"]').first().simulate('change', { target: { value: 'A new required title' } });
+
+    state = store.getState();
+    errors = state['form']['createPost']['syncErrors'];
+    expect(errors).to.deep.equal({
+      author: {
+        name: 'Required field.',
+      },
+    });
+
+    wrapper.find('input[name="author.name"]').first().simulate('change', { target: { value: 'A new required name' } });
 
     state = store.getState();
     errors = state['form']['createPost']['syncErrors'];
