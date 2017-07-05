@@ -16,7 +16,8 @@ function validateImpl(
     const value = values[fieldName];
 
     if ( children && children.length > 0 ) {
-      const result = validateImpl(children, value, isRequired);
+      const next = _.isObject(value) ? value : Object.create(null);
+      const result = validateImpl(children, next, isRequired);
       if (!_.isEmpty(result)) {
         errors[ fieldName ] = result;
       }
