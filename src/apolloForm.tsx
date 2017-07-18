@@ -19,7 +19,6 @@ import {
 import { MutationOptions, QueryOptions } from 'react-apollo/lib/graphql';
 import {
   reduxForm,
-  Form,
   Config,
   SubmissionError,
 } from 'redux-form';
@@ -266,10 +265,14 @@ export const initForm = (document: DocumentNode, options: InitFormOptions): any 
   },
 });
 
+interface ApolloFormWrapperProps {
+  handleSubmit: () => void;
+}
+
 export function apolloForm(
   document: DocumentNode,
   options: ApolloReduxFormOptions = {},
-) {
+): React.ComponentClass<any> {
 
   const removeNotRegistredField = (variables: any, registeredFields: any, path: string[] = []) => {
     const result: any = {};
@@ -292,6 +295,7 @@ export function apolloForm(
   };
 
   const withData = graphql(document, {
+    withRef: true,
     props: ({ mutate }) => ({
       // Since react-redux 6 forms can be initialized with arbitrary values.
       // On submit all values are sent and not only those matching registeredFields.
@@ -305,12 +309,26 @@ export function apolloForm(
     }),
   });
 
-  const Form = buildForm(document, options) as any;
+  const GraphQLForm = buildForm(document, options) as any;
 
-  return withData( (props: any) => {
-    const { handleSubmit, ...rest } = props;
-    return (
-      <Form onSubmit={handleSubmit} {...rest}/>
-    );
-  });
+  class ApolloFormWrapper extends React.Component<ApolloFormWrapperProps, void> {
+    form = null;
+    public getFormInstance = () =>  {
+      return this.form;
+    }
+    render() {
+      const { handleSubmit, ...rest } = this.props;
+      return (
+        <GraphQLForm
+          ref={ (c: any) => { this.form = c; }}
+          onSubmit={handleSubmit}
+          {...rest}
+        />
+      );
+    }
+  }
+
+  const wrapper: React.ComponentClass<any> = withData(ApolloFormWrapper);
+
+  return wrapper;
 }

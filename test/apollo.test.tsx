@@ -1,7 +1,6 @@
 import * as React from 'react';
 
 import { assert, expect } from 'chai';
-import * as sinon from 'sinon';
 
 import gql from 'graphql-tag';
 import {
@@ -67,6 +66,40 @@ describe('apolloForm', () => {
     wrapper.find('button').simulate('submit');
 
 
+  });
+
+  it('exposes redux-form instance', (done: any) => {
+    const query = gql`
+      mutation createPost($title: String, $isDraft: Boolean, $views: Int, $average: Float) {
+        createPost(title: $title, isDraft: $isDraft, views: $views, average: $average) {
+          id
+          createdAt
+        }
+      }`;
+    const data = { createPost: { id: '123', createdAt: '2011.12.12' } };
+    const networkInterface = mockNetworkInterface({ request: { query }, result: { data } });
+    const client = new ApolloClient({ networkInterface, addTypename: false });
+    /* eslint-disable no-underscore-dangle */
+    const store = createStore(
+      combineReducers({
+        form: formReducer,
+        apollo: client.reducer() as Reducer<any>,
+      }),
+      applyMiddleware(client.middleware()),
+    );
+    /* eslint-enable */
+    const CreatePostForm = apolloForm(query);
+    const wrapper = mount(
+      <ApolloProvider client={client} store={store}>
+        <CreatePostForm ref={
+          (component: any) => {
+            const form = component.refs.wrappedInstance.getFormInstance();
+            assert.isDefined( form.submit );
+            done();
+          }}
+        />
+      </ApolloProvider>,
+    );
   });
 
 });
