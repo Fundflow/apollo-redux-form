@@ -89,7 +89,7 @@ function buildTypesTable(document?: DocumentNode): TypeDefinitions {
 function parseOperationSignature(document: DocumentNode, operation: OperationTypeNode ): OperationSignature {
   let variables, name;
   const definitions = document.definitions.filter(
-    (x: DefinitionNode) => x.kind === 'OperationDefinition' && x.operation === operation,
+    (x: OperationDefinitionNode) => x.kind === 'OperationDefinition' && x.operation === operation,
   );
   invariant((definitions.length === 1),
     // tslint:disable-line
