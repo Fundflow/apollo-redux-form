@@ -1,39 +1,30 @@
 import * as React from 'react';
-import { Component } from '@types/react';
 
 const _ = require('lodash'); // tslint:disable-line
 const invariant = require('invariant'); // tslint:disable-line
 
 import {
   visit,
-  ASTNode,
   DocumentNode,
   DefinitionNode,
   VariableDefinitionNode,
   OperationDefinitionNode,
   NamedTypeNode,
   NonNullTypeNode,
-  VariableNode,
-  TypeNode,
   TypeDefinitionNode,
-  EnumTypeDefinitionNode,
   EnumValueDefinitionNode,
-  InputObjectTypeDefinitionNode,
   InputValueDefinitionNode,
-  ScalarTypeDefinitionNode,
-  GraphQLSchema,
 } from 'graphql';
 
 import { MutationOptions, QueryOptions } from 'react-apollo/lib/graphql';
-import { Config, SubmissionError, FormSection } from 'redux-form';
-
 import {
-  FormDecorator,
+  reduxForm,
   Form,
-} from '@types/redux-form';
+  Config,
+  SubmissionError,
+} from 'redux-form';
 
 import { graphql } from 'react-apollo';
-import { reduxForm } from 'redux-form';
 
 import validate from './validation';
 import {
