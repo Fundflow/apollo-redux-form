@@ -1,11 +1,9 @@
 import * as React from 'react';
 
-import { Field, FormSection } from 'redux-form';
-import { BaseFieldProps } from '@types/redux-form/lib/Field';
+import { Field, BaseFieldProps, FormSection } from 'redux-form';
 
 import {
   FieldProps,
-  isScalar,
 } from './apolloForm';
 import { fromCamelToHuman } from './utils';
 
@@ -84,9 +82,9 @@ export class FormBuilder {
       />
     );
   }
-  createFormSection(name: string, children: JSX.Element[]) {
+  createFormSection(name: string, children: JSX.Element[], required?: boolean) {
     return (
-      <FormSection name={name} key={name}>
+      <FormSection name={name} key={name} required={required}>
         { children }
       </FormSection>
     );

@@ -17,6 +17,7 @@
   },
   "files": [
     "typings.d.ts",
+    "redux-form.patch.d.ts",
     "src/index.ts",
     "test/tests.ts"
    ]

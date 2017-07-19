@@ -235,8 +235,8 @@ describe('buildForm', () => {
       expect( wrapper.find('input[name="title"][type="text"][required]') ).to.have.length(1);
       expect( wrapper.find('input[name="isDraft"][type="checkbox"]') ).to.have.length(1);
       expect( wrapper.find('input[name="isDraft"][type="checkbox"][required]') ).to.have.length(0);
-      expect( wrapper.find('input[name="author.name"][type="text"][required]') ).to.have.length(1);
-      expect( wrapper.find('input[name="author.createdAt"][type="number"][required]') ).to.have.length(1);
+      expect( wrapper.find('input[name="author.name"][type="text"]') ).to.have.length(1);
+      expect( wrapper.find('input[name="author.createdAt"][type="number"]') ).to.have.length(1);
       expect( wrapper.find('input[name="content.content"][type="text"][required]') ).to.have.length(1);
       expect( wrapper.find('input[name="content.status"][type="number"]') ).to.have.length(1);
       expect( wrapper.find('input[name="content.status"][type="number"][required]') ).to.have.length(0);

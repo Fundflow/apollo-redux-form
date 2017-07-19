@@ -143,10 +143,10 @@ class VisitingContext {
   }
 }
 
-function visitWithContext(context: VisitingContext, forceRequired: boolean = false) {
+function visitWithContext(context: VisitingContext) {
   const builder: FormBuilder = new FormBuilder();
   const path: string[] = [];
-  let required: boolean = forceRequired;
+  let required: boolean = false;
   return {
     VariableDefinition: {
       enter(node: VariableDefinitionNode) {
@@ -170,8 +170,8 @@ function visitWithContext(context: VisitingContext, forceRequired: boolean = fal
         if (type) {
           switch ( type.kind ) {
             case 'InputObjectTypeDefinition':
-              const children = visit(type.fields, visitWithContext(context, required));
-              return builder.createFormSection(fullPath, children);
+              const children = visit(type.fields, visitWithContext(context));
+              return builder.createFormSection(fullPath, children, required);
             case 'EnumTypeDefinition':
               const options = type.values.map(
                 ({name: {value}}: EnumValueDefinitionNode) => ({key: value, value}),
@@ -208,7 +208,7 @@ function visitWithContext(context: VisitingContext, forceRequired: boolean = fal
         required = true;
       },
       leave(node: NonNullTypeNode) {
-        required = forceRequired;
+        required = false;
         return node.type;
       },
     },

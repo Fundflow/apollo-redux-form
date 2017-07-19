@@ -29,7 +29,6 @@
     "@types/chai": "^3.4.35",
     "@types/chai-as-promised": "0.0.29",
     "@types/enzyme": "^2.7.5",
-    "@types/mocha": "^2.2.39",
     "@types/promises-a-plus": "0.0.27",
     "@types/react-redux": "^4.4.36",
     "@types/sinon": "^1.16.35",
