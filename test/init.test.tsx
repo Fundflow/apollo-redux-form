@@ -172,7 +172,7 @@ describe('initForm', () => {
     const CreatePostForm = apolloForm(createQuery, {
       schema,
       onSubmitSuccess(response: any) {
-        expect(response).to.deep.equal({ data: resultData });
+        expect(response).to.deep.equal( resultData.createPost );
         done();
       },
     });

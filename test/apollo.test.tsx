@@ -52,7 +52,7 @@ describe('apolloForm', () => {
     /* eslint-enable */
     const CreatePostForm = apolloForm(query, {
       onSubmitSuccess(response: any) {
-        expect(response).to.deep.equal({ data });
+        expect(response).to.deep.equal( data.createPost );
         done();
       },
     });

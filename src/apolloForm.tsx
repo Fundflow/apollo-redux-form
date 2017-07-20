@@ -269,6 +269,12 @@ interface ApolloFormWrapperProps {
   handleSubmit: () => void;
 }
 
+interface MutationResponse {
+  data: {
+    [key: string]: any;
+  };
+}
+
 export function apolloForm(
   document: DocumentNode,
   options: ApolloReduxFormOptions = {},
@@ -303,9 +309,12 @@ export function apolloForm(
       // Hence, we need to prune spurious values.
       // see https://github.com/erikras/redux-form/issues/1453
       handleSubmit: (variables: any, dispatch: void, props: any) => mutate({
-          variables: removeNotRegistredField(variables, props.registeredFields),
-          ... options,
-        }).catch ( (error: any) => { throw new SubmissionError(error); } ),
+        variables: removeNotRegistredField(variables, props.registeredFields),
+        ... options,
+      }).then( (response: MutationResponse) => {
+        const { name } = parseOperationSignature(document, 'mutation');
+        return response.data[name];
+      }).catch( (error: any) => { throw new SubmissionError(error); } ),
     }),
   });
 
