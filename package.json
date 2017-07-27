@@ -22,13 +22,14 @@
     "@types/redux-form": "^6.3.2",
     "invariant": "^2.2.2",
     "lodash": "https://registry.npmjs.org/lodash/-/lodash-4.17.4.tgz",
-    "redux-form": "6.5.0"
+    "redux-form": "^7.0.3"
   },
   "devDependencies": {
     "@kadira/storybook": "^2.21.0",
     "@types/chai": "^3.4.35",
     "@types/chai-as-promised": "0.0.29",
     "@types/enzyme": "^2.7.5",
+    "@types/mocha": "^2.2.41",
     "@types/promises-a-plus": "0.0.27",
     "@types/react-redux": "^4.4.36",
     "@types/sinon": "^1.16.35",
