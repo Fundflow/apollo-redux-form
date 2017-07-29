@@ -243,6 +243,65 @@ describe('buildForm', () => {
 
   });
 
+  it('builds a form with custom validation', () => {
+    const CreatePostForm = buildForm(gql`
+      mutation createPost($title: String!, $isDraft: Boolean) {
+        createPost(title: $title, isDraft: $isDraft) {
+          id
+          createdAt
+        }
+      }`, {
+      validate(values): any {
+        const {
+          isDraft,
+        } = values;
+        const errors: { isDraft?: string } = {};
+        if (!isDraft) {
+          errors.isDraft = 'Cannot create draft posts.';
+        }
+        return errors;
+      },
+    });
+    const wrapper = mount(
+      <Provider store={store}>
+        <CreatePostForm />
+      </Provider>,
+    );
+
+    let state: any;
+    let errors: any;
+
+    state = store.getState();
+    errors = state['form']['createPost']['syncErrors'];
+    expect(errors).to.deep.equal({
+      title: 'Required field.',
+      isDraft: 'Cannot create draft posts.',
+    });
+
+    wrapper.find('input[name="title"]').first().simulate('change', { target: { value: 'A new required title' } });
+
+    state = store.getState();
+    errors = state['form']['createPost']['syncErrors'];
+    expect(errors).to.deep.equal({
+      isDraft: 'Cannot create draft posts.',
+    });
+
+    wrapper.find('[name="isDraft"]').first().simulate('change', { target: { value: false } });
+
+    state = store.getState();
+    errors = state['form']['createPost']['syncErrors'];
+    expect(errors).to.deep.equal({
+      isDraft: 'Cannot create draft posts.',
+    });
+
+    wrapper.find('[name="isDraft"]').first().simulate('change', { target: { value: true } });
+
+    state = store.getState();
+    errors = state['form']['createPost']['syncErrors'];
+    expect(errors).to.equal(undefined);
+
+  });
+
   it('builds a form with custom scalar types', (done: any) => {
     const schema = gql`
       scalar Date

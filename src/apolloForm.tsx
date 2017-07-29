@@ -3,6 +3,8 @@ import * as React from 'react';
 const _ = require('lodash'); // tslint:disable-line
 const invariant = require('invariant'); // tslint:disable-line
 
+import * as deepmerge from 'deepmerge';
+
 import {
   visit,
   DocumentNode,
@@ -25,7 +27,7 @@ import {
 
 import { graphql } from 'react-apollo';
 
-import validate from './validation';
+import validateRequiredFields from './validation';
 import {
   FormBuilder,
   FormFieldRenderer,
@@ -229,7 +231,7 @@ export function buildForm(
   document: DocumentNode,
   options: ApolloReduxFormOptions = {}): any {
 
-  const {renderers, schema, ...rest} = options;
+  const {renderers, schema, validate, ...rest} = options;
   const { name, variables } = parseOperationSignature(document, 'mutation');
   const types = buildTypesTable(schema);
 
@@ -238,7 +240,13 @@ export function buildForm(
 
   const withForm = reduxForm({
     form: name,
-    validate: validate.bind(undefined, fields),
+    validate(values, props) {
+      let errors = validateRequiredFields(fields, values);
+      if (validate) {
+        errors = deepmerge(errors, validate(values, props));
+      }
+      return errors;
+    },
     ...rest,
   });
   const renderFn = options.renderForm || defaultRenderForm;
