@@ -100,6 +100,74 @@ describe('buildForm', () => {
     expect( wrapper.find('li[data-key="DELETED"]') ).to.have.length(1);
   });
 
+  it('builds a form with custom field', () => {
+    const schema = gql`
+      input AuthorInput {
+        name: String
+        createdAt: Int
+      }
+    `;
+    const UpdatePostForm = buildForm(gql`
+      mutation updatePost($title: String, $author: AuthorInput) {
+        createPost(title: $title, author: $author) {
+          id
+          createdAt
+        }
+      }`, {
+      schema,
+      customFields: {
+        title: {
+          render: (props: FieldProps) => {
+            const { input, label, meta: { touched, error, warning }, ...rest } = props;
+            return (
+              <div>
+                <label>{label}</label>
+                <div>
+                  <input type='text' {...input} placeholder={label} {...rest} data-custom='custom' />
+                  {touched && ((error && <span>{error}</span>) || (warning && <span>{warning}</span>))}
+                </div>
+              </div>
+            );
+          },
+          format: (value?: string) => value ? value.toUpperCase() : '',
+          normalize: (value?: string) => value ? value.toLowerCase() : '',
+        },
+        'author.name': (props: FieldProps) => {
+          const { input, label, meta: { touched, error, warning }, ...rest } = props;
+          return (
+            <div>
+              <label>{label}</label>
+              <div>
+                <input type='text' {...input} placeholder={label} {...rest} data-custom='custom' />
+                {touched && ((error && <span>{error}</span>) || (warning && <span>{warning}</span>))}
+              </div>
+            </div>
+          );
+        },
+      },
+    });
+    const wrapper = mount(
+      <Provider store={store}>
+        <UpdatePostForm />
+      </Provider>,
+    );
+
+    wrapper.find('input[name="title"]').first().simulate('change', { target: { value: 'must be upper cased' } });
+
+    expect( wrapper.find('input[name="title"][data-custom="custom"][value="MUST BE UPPER CASED"]') ).to.have.length(1);
+    expect( wrapper.find('input[name="author.name"][data-custom="custom"]') ).to.have.length(1);
+
+    let state: any;
+    let values: any;
+
+    state = store.getState();
+    values = state['form']['updatePost']['values'];
+    expect(values).to.deep.equal({
+      title: 'must be upper cased',
+    });
+
+  });
+
   it('builds a form where fields of type ID are hidden', () => {
     const UpdatePostForm = buildForm(gql`
       mutation updatePost($id: ID) {

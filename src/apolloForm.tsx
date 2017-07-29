@@ -57,6 +57,7 @@ export interface FieldProps {
 }
 
 export type ApolloReduxFormOptions = Config<any, any, any> & MutationOptions & {
+  customFields?: FormFieldRenderers;
   renderers?: FormFieldRenderers;
   schema?: DocumentNode;
   renderForm?: (fields: any, props: FormProps) => JSX.Element;
@@ -132,9 +133,11 @@ function isRenderFunction(x: FormFieldRenderFunction | FormFieldRenderer): x is 
 class VisitingContext {
   private types: TypeDefinitions;
   private renderers: FormFieldRenderers;
-  constructor(types: TypeDefinitions, renderers: FormFieldRenderers = {}) {
+  private customFields: FormFieldRenderers;
+  constructor(types: TypeDefinitions, renderers: FormFieldRenderers = {}, customFields = {}) {
     this.types = types;
     this.renderers = renderers;
+    this.customFields = customFields;
   }
   resolveType(typeName: string): TypeDefinitionNode | undefined {
     return this.types[typeName];
@@ -143,62 +146,73 @@ class VisitingContext {
     const render = this.renderers[typeName];
     return isRenderFunction(render) ? {render} : render;
   }
+  resolveFieldRenderer(fieldPath: string): FormFieldRenderer {
+    const render = this.customFields[fieldPath];
+    return isRenderFunction(render) ? {render} : render;
+  }
 }
 
-function visitWithContext(context: VisitingContext) {
+function visitWithContext(context: VisitingContext, path: string[] = []) {
   const builder: FormBuilder = new FormBuilder();
-  const path: string[] = [];
+  let fieldName: string = '';
   let required: boolean = false;
   return {
     VariableDefinition: {
       enter(node: VariableDefinitionNode) {
         const { variable: { name: {value} } } = node;
-        path.push(value);
+        fieldName = value;
       },
       leave(node: VariableDefinitionNode) {
-        path.pop();
+        fieldName = '';
         return node.type;
       },
     },
     NamedType(node: NamedTypeNode) {
       const { name: { value: typeName } } = node;
-      const fullPath = path.join('.');
+
+      const fullPath = path.concat(fieldName);
+      const fullPathStr = fullPath.join('.');
+
       const type = context.resolveType(typeName);
       const renderer = context.resolveRenderer(typeName);
+      const customFieldRenderer = context.resolveFieldRenderer(fullPathStr);
 
-      if ( isScalar(typeName) ) {
-        return builder.createInputField(renderer, fullPath, typeName, required);
+      if (customFieldRenderer.render !== undefined ) {
+        // if a render for this path exists, take the highest priority
+        return builder.createInputField(customFieldRenderer, fieldName, typeName, required);
+      } else if ( isScalar(typeName) ) {
+        return builder.createInputField(renderer, fieldName, typeName, required);
       } else {
         if (type) {
           switch ( type.kind ) {
             case 'InputObjectTypeDefinition':
-              const children = visit(type.fields, visitWithContext(context));
-              return builder.createFormSection(fullPath, children, required);
+              const children = visit(type.fields, visitWithContext(context, fullPath));
+              return builder.createFormSection(fieldName, children, required);
             case 'EnumTypeDefinition':
               const options = type.values.map(
                 ({name: {value}}: EnumValueDefinitionNode) => ({key: value, value}),
               );
-              return builder.createSelectField(renderer, fullPath, typeName, options, required);
+              return builder.createSelectField(renderer, fieldName, typeName, options, required);
             case 'ScalarTypeDefinition':
               if (renderer.render !== undefined) {
-                return builder.createInputField(renderer, fullPath, typeName, required);
+                return builder.createInputField(renderer, fieldName, typeName, required);
               } else {
                 invariant( false,
                   // tslint:disable-line
-                  `Type ${typeName} does not have a default renderer, see ${fullPath}`,
+                  `Type ${typeName} does not have a default renderer, see ${fullPathStr}`,
                 );
               }
               break;
             default:
               invariant( false,
                 // tslint:disable-line
-                `Type ${type.kind} is not handled yet, see ${fullPath}`,
+                `Type ${type.kind} is not handled yet, see ${fullPathStr}`,
               );
           }
         } else {
           invariant( false,
             // tslint:disable-line
-            `Type ${typeName} is unknown for property ${fullPath}`,
+            `Type ${typeName} is unknown for property ${fullPathStr}`,
           );
         }
       }
@@ -217,10 +231,10 @@ function visitWithContext(context: VisitingContext) {
     InputValueDefinition: {
       enter(node: InputValueDefinitionNode) {
         const { name: { value }, type } = node;
-        path.push(value);
+        fieldName = value;
       },
       leave(node: InputValueDefinitionNode) {
-        path.pop();
+        fieldName = '';
         return node.type;
       },
     },
@@ -231,11 +245,11 @@ export function buildForm(
   document: DocumentNode,
   options: ApolloReduxFormOptions = {}): any {
 
-  const {renderers, schema, validate, ...rest} = options;
+  const {renderers, customFields, schema, validate, ...rest} = options;
   const { name, variables } = parseOperationSignature(document, 'mutation');
   const types = buildTypesTable(schema);
 
-  const context = new VisitingContext(types, renderers);
+  const context = new VisitingContext(types, renderers, customFields);
   const fields = visit(variables, visitWithContext(context));
 
   const withForm = reduxForm({
