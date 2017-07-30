@@ -16,13 +16,13 @@ function validateImpl(
       errors[ fieldName ] = 'Required field.';
     } else {
       if ( children && children.length > 0 ) {
-        // don't do nesting if no value is defined
-        if ( !_.isNil(value) ) {
-          const result = validateImpl(children, value);
-          // got some errors, attach them to parent
-          if (!_.isEmpty(result)) {
-            errors[ fieldName ] = result;
-          }
+        // XXX default works only for undefined
+        // hence we need to force an empty child object if value is null
+        // we need to go down the nesting
+        // in gql null, means not found
+        const result = validateImpl(children, value || {});
+        if (!_.isEmpty(result)) {
+          errors[ fieldName ] = result;
         }
       }
     }
