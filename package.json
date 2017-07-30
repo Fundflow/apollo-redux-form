@@ -1,6 +1,6 @@
 {
   "name": "apollo-redux-form",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "redux-form powered by apollo",
   "main": "./lib/src/index.js",
   "typings": "./lib/src/index.d.ts",
