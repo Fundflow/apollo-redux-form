@@ -359,6 +359,11 @@ export function apolloForm(
         if (!_.isEmpty(pruned)) {
           result[key] = pruned;
         }
+      } if (_.isArray(value) ) {
+        const pruned = _.map(value, (item: any) => removeNotRegistredField(item, registeredFields, path));
+        if (!_.isEmpty(pruned)) {
+          result[key] = pruned;
+        }
       } else {
         if (registeredFields[path.join('.')]) {
           result[key] = variables[key];
