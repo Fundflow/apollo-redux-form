@@ -369,13 +369,11 @@ export function apolloForm(
     for (let key in variables) {
       const value = variables[key];
       path.push(key);
-      if (_.isObject(value)) {
+      // redux-form handles array values as scalars
+      // fields of objects in array are not registred
+      // this could be a major problem using Apollo, but for now it works for our simple use cases
+      if (_.isObject(value) && !_.isArray(value)) {
         const pruned = removeNotRegistredField(value, registeredFields, path);
-        if (!_.isEmpty(pruned)) {
-          result[key] = pruned;
-        }
-      } if (_.isArray(value) ) {
-        const pruned = _.map(value, (item: any) => removeNotRegistredField(item, registeredFields, path));
         if (!_.isEmpty(pruned)) {
           result[key] = pruned;
         }
