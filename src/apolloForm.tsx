@@ -58,8 +58,23 @@ export interface FieldProps {
   [prop: string]: any;
 }
 
+export interface Fields {
+  length: number;
+  forEach(callback: (name: string, index: number, fields: Fields) => void): void;
+  get(index: number): any;
+  getAll(): any[];
+  insert(index: number, value: any): void;
+  map(callback: (name: string, index: number, fields: Fields) => any): any;
+  pop(): any;
+  push(value: any): void;
+  remove(index: number): void;
+  shift(): any;
+  swap(indexA: number, indexB: number): void;
+  unshift(value: any): void;
+}
+
 export interface ArrayFieldProps {
-  fields: any[];
+  fields: Fields;
   meta: {
     touched: boolean;
     error: string;
