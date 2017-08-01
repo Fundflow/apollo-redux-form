@@ -6,6 +6,7 @@ const invariant = require('invariant'); // tslint:disable-line
 import * as deepmerge from 'deepmerge';
 
 import {
+  BREAK,
   visit,
   DocumentNode,
   DefinitionNode,
@@ -13,6 +14,7 @@ import {
   OperationDefinitionNode,
   NamedTypeNode,
   NonNullTypeNode,
+  ListTypeNode,
   TypeDefinitionNode,
   EnumValueDefinitionNode,
   InputValueDefinitionNode,
@@ -48,6 +50,16 @@ export interface FormProps {
 export interface FieldProps {
   input: any;
   label: string;
+  meta: {
+    touched: boolean;
+    error: string;
+    warning: string;
+  };
+  [prop: string]: any;
+}
+
+export interface ArrayFieldProps {
+  fields: any[];
   meta: {
     touched: boolean;
     error: string;
@@ -155,6 +167,7 @@ class VisitingContext {
 function visitWithContext(context: VisitingContext, path: string[] = []) {
   const builder: FormBuilder = new FormBuilder();
   let fieldName: string = '';
+  // XXX maybe I do not need this var, I can handle the login inside NonNull hook
   let required: boolean = false;
   return {
     VariableDefinition: {
@@ -227,6 +240,40 @@ function visitWithContext(context: VisitingContext, path: string[] = []) {
         required = false;
         return node.type;
       },
+    },
+    ListType(node: ListTypeNode) {
+      const fullPath = path.concat(fieldName);
+      const fullPathStr = fullPath.join('.');
+      const customFieldRenderer = context.resolveFieldRenderer(fullPathStr);
+
+      // XXX we should also consider NotNullType
+      const {
+        name: {
+          value: typeName,
+        },
+      } = node.type as NamedTypeNode;
+
+      // XXX we are assuming that type is not a scalar
+      const type = context.resolveType(typeName);
+
+      if (type) {
+        if (customFieldRenderer.render) {
+          return builder.createArrayField(customFieldRenderer, fieldName, type, required);
+        } else {
+          invariant( false,
+            // tslint:disable-line
+            `List Type requires a custom field renderer. No renderer found for ${fullPathStr}`,
+          );
+        }
+      } else {
+        invariant( false,
+          // tslint:disable-line
+          `Cannot resolve type ${typeName}`,
+        );
+      }
+
+      return BREAK;
+
     },
     InputValueDefinition: {
       enter(node: InputValueDefinitionNode) {

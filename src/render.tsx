@@ -1,13 +1,19 @@
 import * as React from 'react';
 
-import { Field, BaseFieldProps, FormSection } from 'redux-form';
+import { Field, FieldArray, BaseFieldProps, FormSection } from 'redux-form';
+
+import {
+  TypeDefinitionNode,
+} from 'graphql';
 
 import {
   FieldProps,
+  ArrayFieldProps,
 } from './apolloForm';
+
 import { fromCamelToHuman } from './utils';
 
-export type FormFieldRenderFunction =  (props: FieldProps) => JSX.Element;
+export type FormFieldRenderFunction =  (props: FieldProps | ArrayFieldProps) => JSX.Element;
 
 export type FormFieldRenderer = {
   render: FormFieldRenderFunction;
@@ -95,6 +101,18 @@ export class FormBuilder {
     return (
       <Field key={name} name={name} label={fromCamelToHuman(name)} required={required}
              component={renderFn} options={options} {...rest} />
+    );
+  }
+  createArrayField(renderer: FormFieldRenderer, name: string, childType: TypeDefinitionNode, required?: boolean) {
+    const { render, ...rest } = renderer;
+    return (
+      <FieldArray
+        key={name}
+        name={name}
+        component={render}
+        required={required}
+        {...rest}
+      />
     );
   }
 }
