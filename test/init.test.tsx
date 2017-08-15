@@ -16,8 +16,7 @@ import {
   initForm, buildForm, apolloForm,
 } from '../src/index';
 
-import ApolloClient from 'apollo-client';
-import { ApolloProvider } from 'react-apollo';
+import { ApolloProvider, ApolloClient } from 'react-apollo';
 import { mockNetworkInterface } from 'apollo-test-utils';
 
 import { createStore, combineReducers, applyMiddleware, Reducer } from 'redux';
@@ -56,7 +55,15 @@ describe('initForm', () => {
         }
       }`));
 
-    const store = createStore(
+    interface StoreInterface {
+      form?: {
+        updatePostFormPost: {
+          initial: any;
+        };
+      };
+    }
+
+    const store = createStore<StoreInterface>(
       combineReducers({
         form: formReducer,
         // XXX client.reducer() type too generic
@@ -76,7 +83,7 @@ describe('initForm', () => {
 
     // XXX how to wait until initial values are loaded?
     setTimeout( () => {
-      const initialValues = store.getState()['form']['updatePostFormPost']['initial'];
+      const initialValues = store.getState().form!.updatePostFormPost.initial;
       expect(initialValues).to.deep.equal( data['getPost'] );
       done();
     }, 500);
@@ -98,7 +105,15 @@ describe('initForm', () => {
         }
       }`));
 
-    const store = createStore(
+    interface StoreInterface {
+      form?: {
+        updatePostFormPost: {
+          initial: any;
+        };
+      };
+    }
+
+    const store = createStore<StoreInterface>(
       combineReducers({
         form: formReducer,
         // XXX client.reducer() type too generic
@@ -118,7 +133,7 @@ describe('initForm', () => {
 
     // XXX how to wait until initial values are loaded?
     setTimeout( () => {
-      const initialValues = store.getState()['form']['updatePostFormPost']['initial'];
+      const initialValues = store.getState().form!.updatePostFormPost.initial;
       expect(initialValues).to.deep.equal( data['getPost'] );
       done();
     }, 500);

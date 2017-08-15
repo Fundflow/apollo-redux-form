@@ -50,7 +50,7 @@ const defaultRenderSelectField = (props: FieldProps) => {
       <label>{label}</label>
       <div>
         <select {...input} {...rest} >
-          {options.map( ({key, value}) =>
+          {options.map( ({key, value}: {key: string; value: string}) =>
               <option key={key} value={value}>{value}</option> )}
         </select>
         {touched && ((error && <span>{error}</span>) || (warning && <span>{warning}</span>))}

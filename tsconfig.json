@@ -13,7 +13,12 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "strictNullChecks": true,
-    "jsx": "react"
+    "jsx": "react",
+    "lib": [
+      "es2017",
+      "dom",
+      "esnext.asynciterable"
+    ]
   },
   "files": [
     "typings.d.ts",

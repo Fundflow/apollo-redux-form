@@ -20,7 +20,7 @@ import {
   InputValueDefinitionNode,
 } from 'graphql';
 
-import { MutationOptions, QueryOptions } from 'react-apollo/lib/graphql';
+import { MutationOpts, QueryProps } from 'react-apollo';
 import {
   reduxForm,
   Config,
@@ -83,7 +83,7 @@ export interface ArrayFieldProps {
   [prop: string]: any;
 }
 
-export type ApolloReduxFormOptions = Config<any, any, any> & MutationOptions & {
+export type ApolloReduxFormOptions = Config<any, any, any> & MutationOpts & {
   customFields?: FormFieldRenderers;
   renderers?: FormFieldRenderers;
   schema?: DocumentNode;
@@ -323,29 +323,33 @@ export function buildForm(
       }
       return errors;
     },
-    ...rest,
+    // XXX we should pick only properties compatible with Config
+    ...rest as Config<any, any, any>,
   });
   const renderFn = options.renderForm || defaultRenderForm;
   return withForm(renderFn.bind(undefined, fields));
 }
 
-export type InitFormOptions = (Object | ((props: any) => QueryOptions )) & {
+export type InitFormOptions = (Object | ((props: any) => QueryProps )) & {
   mapToForm?: (values: any) => any;
   [key: string]: any;
 };
 
-export const initForm = (document: DocumentNode, options: InitFormOptions): any => graphql(document, {
+export const initForm = (document: DocumentNode, options: InitFormOptions): any => graphql<{[key: string]: string}>(document, {
   options,
   props: ({ data }) => {
-    const {loading, error} = data;
-    const { name } = parseOperationSignature(document, 'query');
-    const result = data[name];
-    const initialValues =
-      options.mapToForm && result ? options.mapToForm(result) : result;
-    return {
-      loading,
-      initialValues,
-    };
+    if (data) {
+      const {loading, error} = data;
+      const { name } = parseOperationSignature(document, 'query');
+      const result = data[name];
+      const initialValues =
+        options.mapToForm && result ? options.mapToForm(result) : result;
+      return {
+        loading,
+        initialValues,
+      };
+    }
+    return null;
   },
 });
 
@@ -395,19 +399,25 @@ export function apolloForm(
       // In general it is a problem with Apollo mutations because they expect only registred fields.
       // Hence, we need to prune spurious values.
       // see https://github.com/erikras/redux-form/issues/1453
-      handleSubmit: (variables: any, dispatch: void, props: any) => mutate({
-        variables: removeNotRegistredField(variables, props.registeredFields),
-        ... options,
-      }).then( (response: MutationResponse) => {
-        const { name } = parseOperationSignature(document, 'mutation');
-        return response.data[name];
-      }).catch( (error: any) => { throw new SubmissionError(error); } ),
+      handleSubmit: (variables: any, dispatch: void, props: any) => {
+        if (mutate) {
+          return mutate({
+            variables: removeNotRegistredField(variables, props.registeredFields),
+            // XXX we should pick only properties compatible with MutationOpts
+            ... options as MutationOpts,
+          }).then( (response: MutationResponse) => {
+            const { name } = parseOperationSignature(document, 'mutation');
+            return response.data[name];
+          }).catch( (error: any) => { throw new SubmissionError(error); } );
+        }
+        throw new Error(`Expected mutation in apolloForm.`);
+      },
     }),
   });
 
   const GraphQLForm = buildForm(document, options) as any;
 
-  class ApolloFormWrapper extends React.Component<ApolloFormWrapperProps, void> {
+  class ApolloFormWrapper extends React.Component<ApolloFormWrapperProps, {}> {
     form = null;
     public getFormInstance = () =>  {
       return this.form;
@@ -424,7 +434,7 @@ export function apolloForm(
     }
   }
 
-  const wrapper: React.ComponentClass<any> = withData(ApolloFormWrapper);
+  const wrapper: React.ComponentClass<any> = withData(ApolloFormWrapper as React.ComponentClass);
 
   return wrapper;
 }

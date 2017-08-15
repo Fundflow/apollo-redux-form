@@ -12,8 +12,7 @@ import { reducer as formReducer } from 'redux-form';
 
 import { render, mount } from 'enzyme';
 
-import ApolloClient from 'apollo-client';
-import { ApolloProvider } from 'react-apollo';
+import { ApolloProvider, ApolloClient } from 'react-apollo';
 import { mockNetworkInterface } from 'apollo-test-utils';
 
 const globalAny: any = global;
@@ -93,7 +92,7 @@ describe('apolloForm', () => {
       <ApolloProvider client={client} store={store}>
         <CreatePostForm ref={
           (component: any) => {
-            const form = component.refs.wrappedInstance.getFormInstance();
+            const form = component.wrappedInstance.getFormInstance();
             assert.isDefined( form.submit );
             done();
           }}
