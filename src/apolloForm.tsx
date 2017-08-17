@@ -23,7 +23,7 @@ import {
 import { MutationOpts, QueryProps } from 'react-apollo';
 import {
   reduxForm,
-  Config,
+  ConfigProps,
   SubmissionError,
 } from 'redux-form';
 
@@ -83,7 +83,7 @@ export interface ArrayFieldProps {
   [prop: string]: any;
 }
 
-export type ApolloReduxFormOptions = Config<any, any, any> & MutationOpts & {
+export type ApolloReduxFormOptions = Partial<ConfigProps> & MutationOpts & {
   customFields?: FormFieldRenderers;
   renderers?: FormFieldRenderers;
   schema?: DocumentNode;
@@ -171,11 +171,11 @@ class VisitingContext {
   }
   resolveRenderer(typeName: string): FormFieldRenderer {
     const render = this.renderers[typeName];
-    return isRenderFunction(render) ? {render} : render;
+    return isRenderFunction(render) ? {render} as FormFieldRenderer : render;
   }
   resolveFieldRenderer(fieldPath: string): FormFieldRenderer {
     const render = this.customFields[fieldPath];
-    return isRenderFunction(render) ? {render} : render;
+    return isRenderFunction(render) ? {render} as FormFieldRenderer : render;
   }
 }
 
@@ -323,8 +323,8 @@ export function buildForm(
       }
       return errors;
     },
-    // XXX we should pick only properties compatible with Config
-    ...rest as Config<any, any, any>,
+    // XXX we should pick only properties compatible with Partial<ConfigProps>
+    ...rest as Partial<ConfigProps>,
   });
   const renderFn = options.renderForm || defaultRenderForm;
   return withForm(renderFn.bind(undefined, fields));

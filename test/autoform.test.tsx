@@ -29,8 +29,9 @@ const globalAny: any = global;
 
 // some dirty hacks following
 // http://stackoverflow.com/questions/40743131/how-to-prevent-property-does-not-exist-on-type-global-with-jsdom-and-t
-const jsdom = require('jsdom'); // tslint:disable-line
-const document = jsdom.jsdom('<!doctype html><html><body></body></html>');
+var jsdom = require('jsdom'); // tslint:disable-line
+const { JSDOM } = jsdom;
+const { document } = (new JSDOM('')).window;
 globalAny.document = document;
 globalAny.window = document.defaultView;
 
@@ -319,15 +320,15 @@ describe('buildForm', () => {
           createdAt
         }
       }`, {
-      validate(values): any {
+      validate(values: any) {
         const {
           isDraft,
         } = values;
-        const errors: { isDraft?: string } = {};
+        const errs: { isDraft?: string } = {};
         if (!isDraft) {
-          errors.isDraft = 'Cannot create draft posts.';
+          errs.isDraft = 'Cannot create draft posts.';
         }
-        return errors;
+        return errs;
       },
     });
     const wrapper = mount(

@@ -1,9 +1,11 @@
 // some dirty hacks following
 // http://stackoverflow.com/questions/40743131/how-to-prevent-property-does-not-exist-on-type-global-with-jsdom-and-t
 const globalAny: any = global;
-const jsdom = require('jsdom'); // tslint:disable-line
-const document = jsdom.jsdom('<!doctype html><html><body></body></html>');
+var jsdom = require('jsdom'); // tslint:disable-line
+const { JSDOM } = jsdom;
+const { document } = (new JSDOM('')).window;
 globalAny.document = document;
+globalAny.window = document.defaultView;
 globalAny.window = document.defaultView;
 
 import * as React from 'react';

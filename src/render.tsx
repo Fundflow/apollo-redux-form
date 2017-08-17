@@ -17,7 +17,7 @@ export type FormFieldRenderFunction =  (props: FieldProps | ArrayFieldProps) => 
 
 export type FormFieldRenderer = {
   render: FormFieldRenderFunction;
-} & BaseFieldProps;
+} & Partial<BaseFieldProps>;
 
 export interface FormFieldRenderers {
   [key: string]: FormFieldRenderFunction | FormFieldRenderer;
@@ -84,7 +84,7 @@ export class FormBuilder {
         label={fromCamelToHuman(name)}
         required={required && !hidden}
         component={renderFn}
-        {...rest}
+        {...rest as any}
       />
     );
   }
@@ -100,7 +100,7 @@ export class FormBuilder {
     const renderFn = render || defaultRenderSelectField;
     return (
       <Field key={name} name={name} label={fromCamelToHuman(name)} required={required}
-             component={renderFn} options={options} {...rest} />
+             component={renderFn} options={options} {...rest as any} />
     );
   }
   createArrayField(renderer: FormFieldRenderer, name: string, childType: TypeDefinitionNode, required?: boolean) {
@@ -111,7 +111,7 @@ export class FormBuilder {
         name={name}
         component={render}
         required={required}
-        {...rest}
+        {...rest as any}
       />
     );
   }
