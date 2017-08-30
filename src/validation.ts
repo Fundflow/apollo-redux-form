@@ -12,7 +12,7 @@ function validateImpl(
     const isRequired = field.props.required;
     const value = values[fieldName];
 
-    if ( isRequired && _.isNil(value) ) {
+    if ( isRequired && ( _.isNil(value) || value === '' ) ) {
       errors[ fieldName ] = 'Required field.';
     } else {
       if ( children && children.length > 0 ) {
