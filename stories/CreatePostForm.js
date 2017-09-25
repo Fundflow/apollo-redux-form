@@ -5,7 +5,9 @@ import {
   apolloForm
 } from '../lib/src/index';
 
-const defs = gql`
+const schema = gql`
+  scalar Date
+  
   enum State {
     NOT_FOUND
     ACTIVE
@@ -13,10 +15,7 @@ const defs = gql`
     SUSPENDED
   }
   input TextArea {
-    value: String
-  }
-  input Date {
-    value: String
+    text: String
   }
 `;
 
@@ -28,11 +27,17 @@ export const query = gql`
     }
   }`;
 const CreatePostForm = apolloForm(query, {
-  defs,
-  resolvers: {
-    TextArea: { component: 'textarea' },
-    Date: { component: 'input', type: 'date' }
-  },
+  schema,
+  renderers: {
+    Date: (props) => (
+      <div>
+        <div>
+          <label>Date</label>
+        </div>
+        <input type='date' {...props.input} />
+      </div>
+    )
+  }
 });
 
 export default CreatePostForm;
