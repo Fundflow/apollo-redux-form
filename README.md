@@ -8,13 +8,13 @@ ReduxForm powered by Apollo and GraphQL
 
 * Build forms from GraphQL mutations
 * Init forms from GraphQL queries
-* Store form state in Redux
+* Store form state in Redux with ReduxForm
 * Submit forms via Apollo
 
 ## install
 
 ```
-npm i --save Fundflow/apollo-redux-form#0.2.0
+npm install @fundflow/apollo-redux-form
 ```
 
 ## How it works

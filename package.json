@@ -1,12 +1,17 @@
 {
-  "name": "apollo-redux-form",
-  "version": "1.0.1",
+  "name": "@fundflow/apollo-redux-form",
+  "version": "1.0.2",
   "description": "redux-form powered by apollo",
   "main": "./lib/src/index.js",
   "typings": "./lib/src/index.d.ts",
   "types": "./lib/src/index.d.ts",
+  "keywords": [ "graphql", "apollo", "redux-form" ],
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/Fundflow/apollo-redux-form"
+  },
   "scripts": {
-    "release": "./scripts/release.sh",
+    "deploy": "./scripts/deploy.sh",
     "compile": "tsc",
     "watch": "tsc -w",
     "pretest": "npm run compile",
@@ -16,7 +21,7 @@
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook"
   },
-  "author": "",
+  "author": "FundFlow Gmbh",
   "license": "MIT",
   "dependencies": {
     "deepmerge": "^1.5.1",
