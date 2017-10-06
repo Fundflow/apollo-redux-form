@@ -17,7 +17,7 @@ node {
         stage('Build') {
             echo "Building application ..."
 
-            nodejs('nodejs') {
+            nodejs('nodejs-8.x') {
 
                 // Need this to fetch private github dependencies and version the application
                 withCredentials([usernamePassword(credentialsId: 'github-fundflow-jenkins', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_PASSWORD')]) {
