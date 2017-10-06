@@ -31,6 +31,7 @@ node {
 
                 // Workaround for the fact that npm install makes changes to package-lock.json
                 sh 'git checkout -- package-lock.json'
+                sh 'git checkout -- package.json'
 
                 if (env.BRANCH_NAME in ['master']) {
                     sh 'npm version patch'
