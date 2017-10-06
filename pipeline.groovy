@@ -38,8 +38,6 @@ node {
                     sh 'npm version prepatch'
                 }
 
-                sh 'npm run compile'
-
                 version = sh(returnStdout: true, script: "npm version | grep \"{\" | tr -s ':'  | cut -d \"'\" -f 4").trim()
             }
 
