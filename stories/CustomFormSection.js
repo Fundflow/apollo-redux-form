@@ -22,7 +22,12 @@ const schema = gql`
   }
   input AmountInput {
     value: Float
-    currency: String
+    currency: Currency
+  }
+  enum Currency {
+    EUR
+    GBP
+    USD
   }
 `;
 
