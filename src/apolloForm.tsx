@@ -32,9 +32,9 @@ import { graphql } from 'react-apollo';
 import validateRequiredFields from './validation';
 import {
   FormBuilder,
-  FormFieldRenderer,
-  FormFieldRenderers,
-  FormFieldRenderFunction,
+  FormRenderer,
+  FormRenderers,
+  FormRenderFunction,
 } from './render';
 
 export type OperationTypeNode = 'query' | 'mutation';
@@ -55,6 +55,11 @@ export interface FieldProps {
     error: string;
     warning: string;
   };
+  [prop: string]: any;
+}
+
+export interface FormSectionProps {
+  children?: React.ReactNode;
   [prop: string]: any;
 }
 
@@ -84,8 +89,8 @@ export interface ArrayFieldProps {
 }
 
 export type ApolloReduxFormOptions = Partial<ConfigProps> & MutationOpts & {
-  customFields?: FormFieldRenderers;
-  renderers?: FormFieldRenderers;
+  customFields?: FormRenderers;
+  renderers?: FormRenderers;
   schema?: DocumentNode;
   renderForm?: (fields: any, props: FormProps) => JSX.Element;
 };
@@ -153,15 +158,15 @@ const defaultRenderForm = (fields: any, props: FormProps) => {
 export const isScalar = (name: string) =>
   ['ID', 'String', 'Int', 'Float', 'Boolean'].some( (x: string) => x === name );
 
-function isRenderFunction(x: FormFieldRenderFunction | FormFieldRenderer): x is FormFieldRenderFunction {
-  return x === undefined || (x as FormFieldRenderer).render === undefined;
+function isRenderFunction(x: FormRenderFunction | FormRenderer): x is FormRenderFunction {
+  return x === undefined || (x as FormRenderer).render === undefined;
 }
 
 class VisitingContext {
   private types: TypeDefinitions;
-  private renderers: FormFieldRenderers;
-  private customFields: FormFieldRenderers;
-  constructor(types: TypeDefinitions, renderers: FormFieldRenderers = {}, customFields = {}) {
+  private renderers: FormRenderers;
+  private customFields: FormRenderers;
+  constructor(types: TypeDefinitions, renderers: FormRenderers = {}, customFields = {}) {
     this.types = types;
     this.renderers = renderers;
     this.customFields = customFields;
@@ -169,13 +174,13 @@ class VisitingContext {
   resolveType(typeName: string): TypeDefinitionNode | undefined {
     return this.types[typeName];
   }
-  resolveRenderer(typeName: string): FormFieldRenderer {
+  resolveRenderer(typeName: string): FormRenderer {
     const render = this.renderers[typeName];
-    return isRenderFunction(render) ? {render} as FormFieldRenderer : render;
+    return isRenderFunction(render) ? {render} as FormRenderer : render;
   }
-  resolveFieldRenderer(fieldPath: string): FormFieldRenderer {
+  resolveFieldRenderer(fieldPath: string): FormRenderer {
     const render = this.customFields[fieldPath];
-    return isRenderFunction(render) ? {render} as FormFieldRenderer : render;
+    return isRenderFunction(render) ? {render} as FormRenderer : render;
   }
 }
 
@@ -202,20 +207,20 @@ function visitWithContext(context: VisitingContext, path: string[] = []) {
       const fullPathStr = fullPath.join('.');
 
       const type = context.resolveType(typeName);
-      const renderer = context.resolveRenderer(typeName);
-      const customFieldRenderer = context.resolveFieldRenderer(fullPathStr);
+      const rendererByType = context.resolveRenderer(typeName);
+      const rendererByField = context.resolveFieldRenderer(fullPathStr);
 
-      if (customFieldRenderer.render !== undefined ) {
-        // if a render for this path exists, take the highest priority
-        return builder.createInputField(customFieldRenderer, fieldName, typeName, required);
-      } else if ( isScalar(typeName) ) {
+      // if a render for this path exists, take the highest priority
+      const renderer = rendererByField.render !== undefined ? rendererByField : rendererByType;
+
+      if ( isScalar(typeName) ) {
         return builder.createInputField(renderer, fieldName, typeName, required);
       } else {
         if (type) {
           switch ( type.kind ) {
             case 'InputObjectTypeDefinition':
               const children = visit(type.fields, visitWithContext(context, fullPath));
-              return builder.createFormSection(fieldName, children, required);
+              return builder.createFormSection(renderer, fieldName, children, required);
             case 'EnumTypeDefinition':
               const options = type.values.map(
                 ({name: {value}}: EnumValueDefinitionNode) => ({key: value, value}),

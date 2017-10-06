@@ -2,15 +2,15 @@
 // we should make a PR against the original repo since the API allows arbitrary props in FormSection
 // see http://redux-form.com/7.0.1/docs/api/FormSection.md/
 import { FormSection } from 'redux-form';
-import { Component } from "react";
+import { Component, ComponentType } from "react";
 
 declare module 'redux-form' {
 
-  interface FormSectionProps {
+  export interface FormSectionProps<P = {}> {
     name: string;
-    component?: string | Component<any, any>;
+    component?: string | ComponentType<P>;
     [others: string]: any;
   }
 
-  export class FormSection extends Component<FormSectionProps, any> {}
+  export class FormSection extends Component<FormSectionProps> {}
 }
