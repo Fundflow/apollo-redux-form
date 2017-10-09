@@ -108,5 +108,6 @@ boolean skipBuildIfTriggeredByJenkins() {
 boolean isVersionUpdate() {
     def lastCommit = sh(returnStdout: true, script: "git log -1 --pretty=%B").trim()
     def m = lastCommit =~ /^\d+\.\d+\.\d+$/
+    println "Check if last commit is a version update: (${lastCommit})"
     return m.find()
 }
