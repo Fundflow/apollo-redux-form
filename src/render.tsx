@@ -9,18 +9,19 @@ import {
 import {
   FieldProps,
   ArrayFieldProps,
+  FormSectionProps,
 } from './apolloForm';
 
 import { fromCamelToHuman } from './utils';
 
-export type FormFieldRenderFunction =  (props: FieldProps | ArrayFieldProps) => JSX.Element;
+export type FormRenderFunction =  (props: FieldProps | ArrayFieldProps | FormSectionProps) => JSX.Element;
 
-export type FormFieldRenderer = {
-  render: FormFieldRenderFunction;
+export type FormRenderer = {
+  render: FormRenderFunction;
 } & Partial<BaseFieldProps>;
 
-export interface FormFieldRenderers {
-  [key: string]: FormFieldRenderFunction | FormFieldRenderer;
+export interface FormRenderers {
+  [key: string]: FormRenderFunction | FormRenderer;
 }
 
 const defaultRenderField = (Component: any, type: string) => (props: FieldProps) => {
@@ -59,7 +60,7 @@ const defaultRenderSelectField = (props: FieldProps) => {
   );
 };
 
-const defaultFieldRenderers: FormFieldRenderers = {
+const defaultFieldRenderers: FormRenderers = {
   'String': defaultRenderField('input', 'text'),
   'Int': defaultRenderField('input', 'number'),
   'Float': defaultRenderField('input', 'number'),
@@ -73,7 +74,7 @@ export interface SelectOption {
 }
 
 export class FormBuilder {
-  createInputField(renderer: FormFieldRenderer, name: string, type: string, required?: boolean) {
+  createInputField(renderer: FormRenderer, name: string, type: string, required?: boolean) {
     const { render, ...rest } = renderer;
     const renderFn = render || defaultFieldRenderers[ type ];
     const hidden = type === 'ID';
@@ -88,14 +89,14 @@ export class FormBuilder {
       />
     );
   }
-  createFormSection(name: string, children: JSX.Element[], required?: boolean) {
+  createFormSection(renderer: FormRenderer, name: string, children: JSX.Element[], required?: boolean) {
     return (
-      <FormSection name={name} key={name} required={required}>
+      <FormSection name={name} key={name} required={required} component={renderer.render}>
         { children }
       </FormSection>
     );
   }
-  createSelectField(renderer: FormFieldRenderer, name: string, type: string, options: SelectOption[], required?: boolean) {
+  createSelectField(renderer: FormRenderer, name: string, type: string, options: SelectOption[], required?: boolean) {
     const { render, ...rest } = renderer;
     const renderFn = render || defaultRenderSelectField;
     return (
@@ -103,7 +104,7 @@ export class FormBuilder {
              component={renderFn} options={options} {...rest as any} />
     );
   }
-  createArrayField(renderer: FormFieldRenderer, name: string, childType: TypeDefinitionNode, required?: boolean) {
+  createArrayField(renderer: FormRenderer, name: string, childType: TypeDefinitionNode, required?: boolean) {
     const { render, ...rest } = renderer;
     return (
       <FieldArray

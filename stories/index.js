@@ -18,6 +18,7 @@ class LocalNetworkInterface implements NetworkInterface {
 }
 
 import CreatePostForm, { query } from './CreatePostForm';
+import CreateUserForm from './CustomFormSection';
 
 const data = { createPost: { id: '123', createdAt: '2011.12.12' } };
 const networkInterface = new LocalNetworkInterface();
@@ -40,3 +41,12 @@ storiesOf('Create post', module)
       </Provider>
     </ApolloProvider>
   ));
+
+storiesOf('Create user', module)
+    .add('with separate section for company info', () => (
+        <ApolloProvider client={client}>
+            <Provider store={store}>
+                <CreateUserForm />
+            </Provider>
+        </ApolloProvider>
+    ));

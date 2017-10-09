@@ -17,7 +17,7 @@ node {
         stage('Build') {
             echo "Building application ..."
 
-            nodejs('nodejs') {
+            nodejs('nodejs-8.x') {
 
                 // Need this to fetch private github dependencies and version the application
                 withCredentials([usernamePassword(credentialsId: 'github-fundflow-jenkins', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_PASSWORD')]) {
@@ -31,14 +31,13 @@ node {
 
                 // Workaround for the fact that npm install makes changes to package-lock.json
                 sh 'git checkout -- package-lock.json'
+                sh 'git checkout -- package.json'
 
                 if (env.BRANCH_NAME in ['master']) {
                     sh 'npm version patch'
                 } else {
                     sh 'npm version prepatch'
                 }
-
-                sh 'npm run compile'
 
                 version = sh(returnStdout: true, script: "npm version | grep \"{\" | tr -s ':'  | cut -d \"'\" -f 4").trim()
             }
