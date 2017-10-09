@@ -12,7 +12,7 @@ node {
     }
 
     // Workaround for https://issues.jenkins-ci.org/browse/JENKINS-35988
-    if (!skipBuildIfTriggeredByJenkins()  && !isVersionUpdate()) {
+    if (!skipBuildIfTriggeredByJenkins()) {
 
         stage('Build') {
             echo "Building application ..."
@@ -33,10 +33,13 @@ node {
                 sh 'git checkout -- package-lock.json'
                 sh 'git checkout -- package.json'
 
-                if (env.BRANCH_NAME in ['master']) {
-                    sh 'npm version patch'
-                } else {
-                    sh 'npm version prepatch'
+                // Do not patch if version was changed manually
+                if (!isVersionUpdate()) {
+                    if (env.BRANCH_NAME in ['master']) {
+                        sh 'npm version patch'
+                    } else {
+                        sh 'npm version prepatch'
+                    }
                 }
 
                 version = sh(returnStdout: true, script: "npm version | grep \"{\" | tr -s ':'  | cut -d \"'\" -f 4").trim()
@@ -104,6 +107,6 @@ boolean skipBuildIfTriggeredByJenkins() {
 @NonCPS
 boolean isVersionUpdate() {
     def lastCommit = sh(returnStdout: true, script: "git log -1 --pretty=%B").trim()
-    def m = lastCommit =~ /d+\.d+\.d+/
-    return m != null
+    def m = lastCommit =~ /^\d+\.\d+\.\d+$/
+    return m.find()
 }
