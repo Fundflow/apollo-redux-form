@@ -23,7 +23,8 @@
     "posttest": "npm run lint",
     "lint": "tslint 'src/*.ts*' && tslint 'test/*.ts*'",
     "storybook": "start-storybook -p 6006",
-    "build-storybook": "build-storybook"
+    "build-storybook": "build-storybook",
+    "deploy-storybook": "./scripts/deploy-storybook.sh"
   },
   "author": "FundFlow Gmbh",
   "license": "MIT",
