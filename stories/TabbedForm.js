@@ -47,7 +47,6 @@ const TabbedForm = apolloForm(query, {
   renderers: {
     ...defaultRenderers,
     UserInput: (props) => {
-      console.log(props);
       return (
         <Tabs defaultActiveKey="1">
           {
