@@ -12,7 +12,7 @@ node {
     }
 
     // Workaround for https://issues.jenkins-ci.org/browse/JENKINS-35988
-    if (!skipBuildIfTriggeredByJenkins()) {
+    if (!skipBuildIfTriggeredByJenkins()  && !isVersionUpdate()) {
 
         stage('Build') {
             echo "Building application ..."
@@ -99,4 +99,11 @@ boolean skipBuildIfTriggeredByJenkins() {
     }
 
     return false;
+}
+
+@NonCPS
+boolean isVersionUpdate() {
+    def lastCommit = sh(returnStdout: true, script: "git log -1 --pretty=%B").trim()
+    def m = lastCommit =~ /d+\.d+\.d+/
+    return m != null
 }
