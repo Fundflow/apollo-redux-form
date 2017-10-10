@@ -69,7 +69,7 @@ node {
         }
     }
 
-    deleteDir()``
+    deleteDir()
 }
 
 @NonCPS
