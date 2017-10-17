@@ -3,7 +3,7 @@ import * as React from 'react';
 import { Field, FieldArray, BaseFieldProps, FormSection } from 'redux-form';
 
 import {
-  TypeDefinitionNode,
+  TypeNode,
 } from 'graphql';
 
 import {
@@ -104,7 +104,7 @@ export class FormBuilder {
              component={renderFn} options={options} {...rest as any} />
     );
   }
-  createArrayField(renderer: FormRenderer, name: string, childType: TypeDefinitionNode, required?: boolean) {
+  createArrayField(renderer: FormRenderer, name: string, childType: TypeNode, required?: boolean) {
     const { render, ...rest } = renderer;
     return (
       <FieldArray
