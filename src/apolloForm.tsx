@@ -265,35 +265,15 @@ function visitWithContext(context: VisitingContext, path: string[] = []) {
       const fullPath = path.concat(fieldName);
       const fullPathStr = fullPath.join('.');
       const customFieldRenderer = context.resolveFieldRenderer(fullPathStr);
-
-      // XXX we should also consider NotNullType
-      const {
-        name: {
-          value: typeName,
-        },
-      } = node.type as NamedTypeNode;
-
-      // XXX we are assuming that type is not a scalar
-      const type = context.resolveType(typeName);
-
-      if (type) {
-        if (customFieldRenderer.render) {
-          return builder.createArrayField(customFieldRenderer, fieldName, type, required);
-        } else {
-          invariant( false,
-            // tslint:disable-line
-            `List Type requires a custom field renderer. No renderer found for ${fullPathStr}`,
-          );
-        }
+      if (customFieldRenderer.render) {
+        return builder.createArrayField(customFieldRenderer, fieldName, node.type, required);
       } else {
         invariant( false,
           // tslint:disable-line
-          `Cannot resolve type ${typeName}`,
+          `List Type requires a custom field renderer. No renderer found for ${fullPathStr}`,
         );
       }
-
       return BREAK;
-
     },
     InputValueDefinition: {
       enter(node: InputValueDefinitionNode) {

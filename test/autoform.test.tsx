@@ -14,7 +14,7 @@ import {
 } from '../src/index';
 
 import { createStore, combineReducers } from 'redux';
-import { reducer as formReducer } from 'redux-form';
+import {reducer as formReducer, FieldArray} from 'redux-form';
 import { Provider } from 'react-redux';
 
 const reducers = {
@@ -422,6 +422,63 @@ describe('buildForm', () => {
 
       wrapper.find('form').simulate('submit');
 
+  });
+
+  it('cannot build a form when array input fields do not define a custom field render function', () => {
+    const schema = gql`
+      input UserInput {
+        arrayOfScalars: [String]
+      }
+    `;
+
+    assert.throw( () => buildForm(gql`
+      mutation createUser($user: UserInput) {
+        createUser(user: $user) {
+          id
+          createdAt
+        }
+      }`,
+      {
+        schema,
+      }), /List Type requires a custom field renderer/);
+  });
+
+  it('builds a form when array input fields define a custom field render function', () => {
+    const schema = gql`
+      input UserInput {
+        arrayOfScalars: [String]
+        requiredArrayOfScalars: [String]!
+        arrayOfRequiredScalars: [String!]
+        requiredArrayOfRequiredScalars: [String!]!
+        arrayOfArrays: [[String]]
+        requiredArrayOfArrays: [[String]]!
+        arrayOfRequiredArrays: [[String]!]
+        requiredArrayOfRequiredArrays: [[String]!]!
+      }
+    `;
+
+    const CreateUserForm = buildForm(gql`
+      mutation createUser($user: UserInput) {
+        createUser(user: $user) {
+          id
+          createdAt
+        }
+      }`,
+      {
+        schema,
+        customFields: {
+          'user.arrayOfScalars': (props: any) => <div />,
+          'user.requiredArrayOfScalars': (props: any) => <div />,
+          'user.arrayOfRequiredScalars': (props: any) => <div />,
+          'user.requiredArrayOfRequiredScalars': (props: any) => <div />,
+          'user.arrayOfArrays': (props: any) => <div />,
+          'user.requiredArrayOfArrays': (props: any) => <div />,
+          'user.arrayOfRequiredArrays': (props: any) => <div />,
+          'user.requiredArrayOfRequiredArrays': (props: any) => <div />,
+        },
+      });
+
+    assert.isTrue(true);
   });
 
 });
