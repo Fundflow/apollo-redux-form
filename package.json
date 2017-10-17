@@ -23,7 +23,8 @@
     "posttest": "npm run lint",
     "lint": "tslint 'src/*.ts*' && tslint 'test/*.ts*'",
     "storybook": "start-storybook -p 6006",
-    "build-storybook": "build-storybook"
+    "build-storybook": "build-storybook",
+    "deploy-storybook": "./scripts/deploy-storybook.sh"
   },
   "author": "FundFlow Gmbh",
   "license": "MIT",
@@ -46,6 +47,7 @@
     "@types/react-redux": "^5.0.4",
     "@types/redux-form": "^7.0.2",
     "@types/sinon": "^2.3.3",
+    "antd": "^2.13.4",
     "apollo-client": "^1.9.1",
     "apollo-test-utils": "^0.3.2",
     "chai": "^4.1.1",

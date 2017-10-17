@@ -1,4 +1,4 @@
-import React from 'react';
+import renderers from './defaultRenderers';
 
 import gql from 'graphql-tag'
 import {
@@ -28,16 +28,7 @@ export const query = gql`
   }`;
 const CreatePostForm = apolloForm(query, {
   schema,
-  renderers: {
-    Date: (props) => (
-      <div>
-        <div>
-          <label>Date</label>
-        </div>
-        <input type='date' {...props.input} />
-      </div>
-    )
-  }
+  renderers,
 });
 
 export default CreatePostForm;

@@ -1,8 +1,10 @@
 import React from 'react';
 
+import defaultRenderers from './defaultRenderers';
+
 import gql from 'graphql-tag'
 import {
-    apolloForm
+  apolloForm
 } from '../lib/src/index';
 
 const schema = gql`
@@ -39,32 +41,33 @@ export const query = gql`
     }
   }`;
 const CreateUserForm = apolloForm(query, {
-    schema,
-    renderers: {
-        CompanyInput: (props) => {
-            return (
-                <div style={{border: '1px solid black'}}>
-                    {props.children}
-                </div>
-            );
-        },
-        AddressInput: (props) => {
-            return (
-                <div style={{border: '1px solid red'}}>
-                    {props.children}
-                </div>
-            );
-        }
+  schema,
+  renderers: {
+    ...defaultRenderers,
+    CompanyInput: (props) => {
+      return (
+        <div style={{border: '1px solid black'}}>
+          {props.children}
+        </div>
+      );
     },
-    customFields: {
-        'user.wage': (props) => {
-            return (
-                <div style={{border: '1px solid blue'}}>
-                    {props.children}
-                </div>
-            );
-        }
+    AddressInput: (props) => {
+      return (
+        <div style={{border: '1px solid red'}}>
+          {props.children}
+        </div>
+      );
     }
+  },
+  customFields: {
+    'user.wage': (props) => {
+      return (
+        <div style={{border: '1px solid blue'}}>
+          {props.children}
+        </div>
+      );
+    }
+  }
 });
 
 export default CreateUserForm;
