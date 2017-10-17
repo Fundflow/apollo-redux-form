@@ -33,17 +33,10 @@ node {
                 sh 'git checkout -- package-lock.json'
                 sh 'git checkout -- package.json'
 
-                lastCommit = sh(returnStdout: true, script: "git log -1 --pretty=%B").trim()
-                m = lastCommit =~ /^\d+\.\d+\.\d+$/
-                isVersionUpdate = m.find()
-
-                // Do not patch if version was changed manually
-                if (!isVersionUpdate) {
-                    if (env.BRANCH_NAME in ['master']) {
-                        sh 'npm version patch'
-                    } else {
-                        sh 'npm version prepatch'
-                    }
+                if (env.BRANCH_NAME in ['master']) {
+                    sh 'npm version patch'
+                } else {
+                    sh 'npm version prepatch'
                 }
 
                 version = sh(returnStdout: true, script: "npm version | grep \"{\" | tr -s ':'  | cut -d \"'\" -f 4").trim()
