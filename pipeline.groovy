@@ -5,64 +5,60 @@ properties([
 node {
     String version = ''
 
-    deleteDir()
-
-    stage('Checkout') {
-        checkout scm
-    }
-
-    // Workaround for https://issues.jenkins-ci.org/browse/JENKINS-35988
-    if (!skipBuildIfTriggeredByJenkins()) {
-
-        stage('Build') {
-            echo "Building application ..."
-
-            nodejs('nodejs-8.x') {
-
-                // Need this to fetch private github dependencies and version the application
-                withCredentials([usernamePassword(credentialsId: 'github-fundflow-jenkins', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_PASSWORD')]) {
-                    sh 'git config --global url."https://${GITHUB_USER}:${GITHUB_PASSWORD}@github.com/".insteadOf "git://github.com/"'
-                    sh 'git config --global user.email jenkins@fundflow.de'
-                    sh 'git config --global user.name jenkins'
-                }
-
-                sh 'npm install --verbose'
-                sh 'CI=true npm run test'
-
-                // Workaround for the fact that npm install makes changes to package-lock.json
-                sh 'git checkout -- package-lock.json'
-                sh 'git checkout -- package.json'
-
-                if (env.BRANCH_NAME in ['master']) {
-                    sh 'npm version patch'
-                } else {
-                    sh 'npm version prepatch'
-                }
-
-                version = sh(returnStdout: true, script: "npm version | grep \"{\" | tr -s ':'  | cut -d \"'\" -f 4").trim()
-            }
-
-            echo "Successfully built application version ${version}"
+    try {
+        stage('Checkout') {
+            checkout scm
         }
 
-        if (env.BRANCH_NAME in ['master']) {
+        // Workaround for https://issues.jenkins-ci.org/browse/JENKINS-35988
+        if (!skipBuildIfTriggeredByJenkins()) {
 
-            stage('Publish Version') {
+            docker.image("node:8").inside {
+                
+                stage('Build') {
 
-                echo "Tagging repository and updating package.json with release version ${version} ..."
+                    // Need this to fetch private github dependencies and version the application
+                    withCredentials([usernamePassword(credentialsId: 'github-fundflow-jenkins', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_PASSWORD')]) {
+                        sh 'git config --global url."https://${GITHUB_USER}:${GITHUB_PASSWORD}@github.com/".insteadOf "git://github.com/"'
+                        sh 'git config --global user.email jenkins@fundflow.de'
+                        sh 'git config --global user.name jenkins'
+                    }
 
-                // Required due to https://issues.jenkins-ci.org/browse/JENKINS-28335
-                withCredentials([usernamePassword(credentialsId: 'github-fundflow-jenkins', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_PASSWORD')]) {
-                    sh 'git config --global url."https://${GITHUB_USER}:${GITHUB_PASSWORD}@github.com/".insteadOf "https://github.com/"'
-                    sh """git push origin HEAD:${env.BRANCH_NAME}"""
-                    sh """git push origin v${version}"""
+                    sh 'npm install --verbose'
+                    sh 'CI=true npm run test'
+
+                    // Workaround for the fact that npm install makes changes to package-lock.json
+                    sh 'git checkout -- package-lock.json'
+                    sh 'git checkout -- package.json'
+
+                    if (env.BRANCH_NAME in ['master']) {
+                        sh 'npm version patch'
+                    } else {
+                        sh 'npm version prepatch'
+                    }
+
+                    version = sh(returnStdout: true, script: "npm version | grep \"{\" | tr -s ':'  | cut -d \"'\" -f 4").trim()
                 }
+            }
+                
+            if (env.BRANCH_NAME in ['master']) {
 
+                stage('Publish Version') {
+
+                    echo "Tagging repository and updating package.json with release version ${version} ..."
+
+                    // Required due to https://issues.jenkins-ci.org/browse/JENKINS-28335
+                    withCredentials([usernamePassword(credentialsId: 'github-fundflow-jenkins', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_PASSWORD')]) {
+                        sh 'git config --global url."https://${GITHUB_USER}:${GITHUB_PASSWORD}@github.com/".insteadOf "https://github.com/"'
+                        sh """git push origin HEAD:${env.BRANCH_NAME}"""
+                        sh """git push origin v${version}"""
+                    }
+                }
             }
         }
+    } finally {
+        deleteDir()   
     }
-
-    deleteDir()
 }
 
 @NonCPS
@@ -91,7 +87,6 @@ boolean skipBuildIfTriggeredByJenkins() {
         if (changeLogSets.size() != 0) {
             println "Skipping build. No changes from authors other than Jenkins."
             currentBuild.result = currentBuild.rawBuild.getPreviousBuild()?.result?.toString()
-            currentBuild.rawBuild.delete()
             return true;
         } else {
             println "No changes found. Assuming manual run of build or first run."
