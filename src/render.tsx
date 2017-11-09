@@ -16,8 +16,13 @@ import { fromCamelToHuman } from './utils';
 
 export type FormRenderFunction =  (props: FieldProps | ArrayFieldProps | FormSectionProps) => JSX.Element;
 
+// XXX we should distinguish between FormFieldRender, FormSectionRender and so on
+// because some properties make sense in one case, but not in the other
+// see issue https://github.com/Fundflow/apollo-redux-form/issues/31
 export type FormRenderer = {
   render: FormRenderFunction;
+  renderers?: FormRenderers;
+  customFields?: FormRenderers;
 } & Partial<BaseFieldProps>;
 
 export interface FormRenderers {

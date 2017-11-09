@@ -182,6 +182,13 @@ class VisitingContext {
     const render = this.customFields[fieldPath];
     return isRenderFunction(render) ? {render} as FormRenderer : render;
   }
+  extend(renderers: FormRenderers = {}, customFields: FormRenderers = {}) {
+    return new VisitingContext(
+      this.types,
+      { ...this.renderers, ...renderers },
+      { ...this.customFields, ...customFields },
+    );
+  }
 }
 
 function visitWithContext(context: VisitingContext, path: string[] = []) {
@@ -219,7 +226,8 @@ function visitWithContext(context: VisitingContext, path: string[] = []) {
         if (type) {
           switch ( type.kind ) {
             case 'InputObjectTypeDefinition':
-              const children = visit(type.fields, visitWithContext(context, fullPath));
+              const nestedContext = context.extend(renderer.renderers, renderer.customFields);
+              const children = visit(type.fields, visitWithContext(nestedContext, fullPath));
               return builder.createFormSection(renderer, fieldName, children, required);
             case 'EnumTypeDefinition':
               const options = type.values.map(
