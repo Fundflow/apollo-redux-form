@@ -182,11 +182,11 @@ class VisitingContext {
     const render = this.customFields[fieldPath];
     return isRenderFunction(render) ? {render} as FormRenderer : render;
   }
-  extend(renderers: FormRenderers ={}, customFields: FormRenderers ={}) {
+  extend(renderers: FormRenderers = {}, customFields: FormRenderers = {}) {
     return new VisitingContext(
       this.types,
       { ...this.renderers, ...renderers },
-      { ...this.customFields, ...customFields }
+      { ...this.customFields, ...customFields },
     );
   }
 }
