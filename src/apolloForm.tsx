@@ -219,6 +219,8 @@ function visitWithContext(context: VisitingContext, path: string[] = []) {
 
       // if a render for this path exists, take the highest priority
       const renderer = rendererByField.render !== undefined ? rendererByField : rendererByType;
+      const selectRenderer = context.resolveRenderer('Select');
+
 
       if ( isScalar(typeName) ) {
         return builder.createInputField(renderer, fieldName, typeName, required);
@@ -233,7 +235,8 @@ function visitWithContext(context: VisitingContext, path: string[] = []) {
               const options = type.values.map(
                 ({name: {value}}: EnumValueDefinitionNode) => ({key: value, value}),
               );
-              return builder.createSelectField(renderer, fieldName, typeName, options, required);
+              const enumRenderer = renderer.render !== undefined ? renderer : selectRenderer;
+              return builder.createSelectField(enumRenderer, fieldName, typeName, options, required);
             case 'ScalarTypeDefinition':
               if (renderer.render !== undefined) {
                 return builder.createInputField(renderer, fieldName, typeName, required);
