@@ -96,7 +96,7 @@ export type ApolloReduxFormOptions = Partial<ConfigProps> & MutationOpts & {
 };
 
 interface TypeDefinitions {
-  [type: string]: TypeDefinitionNode;
+  [type: string]: TypeDefinitionNode | InputValueDefinitionNode;
 }
 
 interface OperationSignature {
@@ -105,7 +105,7 @@ interface OperationSignature {
   variables: VariableDefinitionNode[];
 }
 
-function buildTypesTable(document?: DocumentNode): TypeDefinitions {
+function buildDefinitionsTable(document?: DocumentNode) {
   const types: TypeDefinitions = {};
 
   if ( document ) {
@@ -114,7 +114,12 @@ function buildTypesTable(document?: DocumentNode): TypeDefinitions {
         x.kind === 'EnumTypeDefinition' ||
         x.kind === 'InputObjectTypeDefinition' ||
         x.kind === 'ScalarTypeDefinition',
-    ).forEach( (type: TypeDefinitionNode): void => { types[ type.name.value ] = type; });
+    ).forEach( (type: TypeDefinitionNode): void => {
+      types[ type.name.value ] = type;
+      if (type.kind === 'InputObjectTypeDefinition') {
+        type.fields.forEach((fieldType: InputValueDefinitionNode): void => {types[fieldType.name.value] = fieldType; });
+      }
+  });
   }
 
   return types;
@@ -171,7 +176,7 @@ class VisitingContext {
     this.renderers = renderers;
     this.customFields = customFields;
   }
-  resolveType(typeName: string): TypeDefinitionNode | undefined {
+  resolveType(typeName: string): TypeDefinitionNode | InputValueDefinitionNode | undefined {
     return this.types[typeName];
   }
   resolveRenderer(typeName: string): FormRenderer {
@@ -213,7 +218,7 @@ function visitWithContext(context: VisitingContext, path: string[] = []) {
       const fullPath = path.concat(fieldName);
       const fullPathStr = fullPath.join('.');
 
-      const type = context.resolveType(typeName);
+      const type = context.resolveType(typeName) && context.resolveType(typeName) || context.resolveType(fieldName);
       const rendererByType = context.resolveRenderer(typeName);
       const rendererByField = context.resolveFieldRenderer(fullPathStr);
 
@@ -223,23 +228,24 @@ function visitWithContext(context: VisitingContext, path: string[] = []) {
 
 
       if ( isScalar(typeName) ) {
-        return builder.createInputField(renderer, fieldName, typeName, required);
+        return builder.createInputField(renderer, fieldName, typeName, required, type);
       } else {
         if (type) {
           switch ( type.kind ) {
             case 'InputObjectTypeDefinition':
               const nestedContext = context.extend(renderer.renderers, renderer.customFields);
               const children = visit(type.fields, visitWithContext(nestedContext, fullPath));
-              return builder.createFormSection(renderer, fieldName, children, required);
+              return builder.createFormSection(renderer, fieldName, children, required, type);
             case 'EnumTypeDefinition':
               const options = type.values.map(
                 ({name: {value}}: EnumValueDefinitionNode) => ({key: value, value}),
               );
               const enumRenderer = renderer.render !== undefined ? renderer : selectRenderer;
-              return builder.createSelectField(enumRenderer, fieldName, typeName, options, required);
+              return builder.createSelectField(enumRenderer, fieldName, typeName, options, required, type);
             case 'ScalarTypeDefinition':
+            case 'InputValueDefinition':
               if (renderer.render !== undefined) {
-                return builder.createInputField(renderer, fieldName, typeName, required);
+                return builder.createInputField(renderer, fieldName, typeName, required, type);
               } else {
                 invariant( false,
                   // tslint:disable-line
@@ -305,11 +311,10 @@ export function buildForm(
 
   const {renderers, customFields, schema, validate, ...rest} = options;
   const { name, variables } = parseOperationSignature(document, 'mutation');
-  const types = buildTypesTable(schema);
-
+  const types = buildDefinitionsTable(schema);
+  //console.log(types)
   const context = new VisitingContext(types, renderers, customFields);
   const fields = visit(variables, visitWithContext(context));
-
   const withForm = reduxForm({
     form: name,
     validate(values, props) {
