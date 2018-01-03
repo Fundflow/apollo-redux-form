@@ -239,6 +239,7 @@ function visitWithContext(context: VisitingContext, path: string[] = []) {
                 ({name: {value}}: EnumValueDefinitionNode) => ({key: value, value}),
               );
               const enumRenderer = renderer.render !== undefined ? renderer : context.resolveRenderer('Enum');
+              
               return builder.createSelectField(enumRenderer, fieldName, typeName, options, required, type);
             case 'ScalarTypeDefinition':
             case 'InputValueDefinition':
