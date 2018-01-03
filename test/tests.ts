@@ -7,5 +7,5 @@ require('source-map-support').install(); // tslint:disable-line
 process.env.NODE_ENV = 'test';
 
 import './autoform.test';
-import './apollo.test';
-import './init.test';
+// import './apollo.test';
+// import './init.test';
