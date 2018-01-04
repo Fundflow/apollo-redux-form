@@ -116,7 +116,7 @@ function buildDefinitionsTable(document?: DocumentNode) {
         x.kind === 'ScalarTypeDefinition',
     ).forEach( (type: TypeDefinitionNode): void => {
       types[ type.name.value ] = type;
-      if (type.kind === 'InputObjectTypeDefinition') {
+      if (type.kind === 'InputObjectTypeDefinition' && !type.name.value.includes('WhereInput')) {
         type.fields.forEach((fieldType: InputValueDefinitionNode): void => {types[fieldType.name.value] = fieldType; });
       }
   });
@@ -233,13 +233,14 @@ function visitWithContext(context: VisitingContext, path: string[] = []) {
             case 'InputObjectTypeDefinition':
               const nestedContext = context.extend(renderer.renderers, renderer.customFields);
               const children = visit(type.fields, visitWithContext(nestedContext, fullPath));
-              return builder.createFormSection(renderer, fieldName, children, required, type);
+              const objectRenderer = renderer.render !== undefined ? renderer : context.resolveRenderer('Object');
+              return builder.createFormSection(objectRenderer, fieldName, children, required, type);
             case 'EnumTypeDefinition':
               const options = type.values.map(
                 ({name: {value}}: EnumValueDefinitionNode) => ({key: value, value}),
               );
               const enumRenderer = renderer.render !== undefined ? renderer : context.resolveRenderer('Enum');
-              
+
               return builder.createSelectField(enumRenderer, fieldName, typeName, options, required, type);
             case 'ScalarTypeDefinition':
             case 'InputValueDefinition':
