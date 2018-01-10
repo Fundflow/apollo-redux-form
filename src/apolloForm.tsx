@@ -200,7 +200,7 @@ function visitWithContext(context: VisitingContext, path: string[] = []) {
   const builder: FormBuilder = new FormBuilder();
   let fieldName: string = '';
   // XXX maybe I do not need this var, I can handle the login inside NonNull hook
-  let required: boolean = false;
+  let required: boolean = true;
   return {
     VariableDefinition: {
       enter(node: VariableDefinitionNode) {
@@ -217,7 +217,7 @@ function visitWithContext(context: VisitingContext, path: string[] = []) {
 
       const fullPath = path.concat(fieldName);
       const fullPathStr = fullPath.join('.');
-
+      
       const type = context.resolveType(typeName) && context.resolveType(typeName) || context.resolveType(fieldName);
       const rendererByType = context.resolveRenderer(typeName);
       const rendererByField = context.resolveFieldRenderer(fullPathStr);
@@ -226,7 +226,8 @@ function visitWithContext(context: VisitingContext, path: string[] = []) {
       const renderer = rendererByField.render !== undefined ? rendererByField : rendererByType;
 
       if ( isScalar(typeName) ) {
-        return builder.createInputField(renderer, fieldName, typeName, required, type);
+        const definition = context.resolveType(fieldName) && context.resolveType(fieldName) || type;
+        return builder.createInputField(renderer, fieldName, typeName, required, definition);
       } else {
         if (type) {
           switch ( type.kind ) {
@@ -234,17 +235,19 @@ function visitWithContext(context: VisitingContext, path: string[] = []) {
               const nestedContext = context.extend(renderer.renderers, renderer.customFields);
               const children = visit(type.fields, visitWithContext(nestedContext, fullPath));
               const objectRenderer = renderer.render !== undefined ? renderer : context.resolveRenderer('Object');
-              return builder.createFormSection(objectRenderer, fieldName, children, required, type);
+              const definition = context.resolveType(fieldName) && context.resolveType(fieldName) || type;
+              return builder.createFormSection(objectRenderer, fieldName, children, required, definition);
             case 'EnumTypeDefinition':
               const options = type.values.map(
                 ({name: {value}}: EnumValueDefinitionNode) => ({key: value, value}),
               );
               const enumRenderer = renderer.render !== undefined ? renderer : context.resolveRenderer('Enum');
-
-              return builder.createSelectField(enumRenderer, fieldName, typeName, options, required, type);
+              const definition1 = context.resolveType(fieldName) && context.resolveType(fieldName) || type;
+              return builder.createSelectField(enumRenderer, fieldName, typeName, options, required, definition1);
             case 'ScalarTypeDefinition':
             case 'InputValueDefinition':
               if (renderer.render !== undefined) {
+                
                 return builder.createInputField(renderer, fieldName, typeName, required, type);
               } else {
                 invariant( false,
@@ -282,6 +285,7 @@ function visitWithContext(context: VisitingContext, path: string[] = []) {
       const fullPath = path.concat(fieldName);
       const fullPathStr = fullPath.join('.');
       const customFieldRenderer = context.resolveFieldRenderer(fullPathStr);
+      console.log(fullPathStr)
       if (customFieldRenderer.render) {
         return builder.createArrayField(customFieldRenderer, fieldName, node.type, required);
       } else {
@@ -312,9 +316,10 @@ export function buildForm(
   const {renderers, customFields, schema, validate, ...rest} = options;
   const { name, variables } = parseOperationSignature(document, 'mutation');
   const types = buildDefinitionsTable(schema);
-  //console.log(types)
+
   const context = new VisitingContext(types, renderers, customFields);
   const fields = visit(variables, visitWithContext(context));
+ 
   const withForm = reduxForm({
     form: name,
     validate(values, props) {
