@@ -106,7 +106,7 @@ export class FormBuilder {
   createFormSection(
       renderer: FormRenderer,
       name: string,
-      children: JSX.Element[],
+      children: JSX.Element[] | any,
       required?: boolean,
       typeDefinition?: TypeDefinitionNode | InputValueDefinitionNode,
     ) {
@@ -131,7 +131,9 @@ export class FormBuilder {
              component={renderFn} options={options} {...rest as any} />
     );
   }
-  createArrayField(renderer: FormRenderer, name: string, childType: TypeNode, required?: boolean) {
+  createArrayField(renderer: FormRenderer, name: string, fields: JSX.Element[] | JSX.Element | undefined,
+    childType: TypeNode, required?: boolean,
+    typeDefinition?: TypeDefinitionNode | InputValueDefinitionNode) {
     const { render, ...rest } = renderer;
     return (
       <FieldArray
@@ -139,6 +141,8 @@ export class FormBuilder {
         name={name}
         component={render}
         required={required}
+        arrayFields={fields}
+        typeDefinition={typeDefinition}
         {...rest as any}
       />
     );
