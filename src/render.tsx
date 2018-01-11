@@ -4,6 +4,8 @@ import { Field, FieldArray, BaseFieldProps, FormSection } from 'redux-form';
 
 import {
   TypeNode,
+  TypeDefinitionNode,
+  InputValueDefinitionNode,
 } from 'graphql';
 
 import {
@@ -79,7 +81,13 @@ export interface SelectOption {
 }
 
 export class FormBuilder {
-  createInputField(renderer: FormRenderer, name: string, type: string, required?: boolean) {
+  createInputField(
+    renderer: FormRenderer,
+    name: string,
+    type: string,
+    required?: boolean,
+    typeDefinition?: TypeDefinitionNode | InputValueDefinitionNode,
+  ) {
     const { render, ...rest } = renderer;
     const renderFn = render || defaultFieldRenderers[ type ];
     const hidden = type === 'ID';
@@ -90,26 +98,42 @@ export class FormBuilder {
         label={fromCamelToHuman(name)}
         required={required && !hidden}
         component={renderFn}
+        typeDefinition={typeDefinition}
         {...rest as any}
       />
     );
   }
-  createFormSection(renderer: FormRenderer, name: string, children: JSX.Element[], required?: boolean) {
+  createFormSection(
+      renderer: FormRenderer,
+      name: string,
+      children: JSX.Element[] | any,
+      required?: boolean,
+      typeDefinition?: TypeDefinitionNode | InputValueDefinitionNode,
+    ) {
     return (
-      <FormSection name={name} key={name} required={required} component={renderer.render}>
+      <FormSection name={name} key={name} required={required} component={renderer.render} typeDefinition={typeDefinition}>
         { children }
       </FormSection>
     );
   }
-  createSelectField(renderer: FormRenderer, name: string, type: string, options: SelectOption[], required?: boolean) {
+  createSelectField(
+      renderer: FormRenderer,
+      name: string,
+      type: String,
+      options: SelectOption[],
+      required?: boolean,
+      typeDefinition?: TypeDefinitionNode | InputValueDefinitionNode,
+    ) {
     const { render, ...rest } = renderer;
     const renderFn = render || defaultRenderSelectField;
     return (
-      <Field key={name} name={name} label={fromCamelToHuman(name)} required={required}
+      <Field key={name} name={name} label={fromCamelToHuman(name)} required={required} typeDefinition={typeDefinition}
              component={renderFn} options={options} {...rest as any} />
     );
   }
-  createArrayField(renderer: FormRenderer, name: string, childType: TypeNode, required?: boolean) {
+  createArrayField(renderer: FormRenderer, name: string, fields: JSX.Element[] | JSX.Element | undefined,
+    childType: TypeNode, required?: boolean,
+    typeDefinition?: TypeDefinitionNode | InputValueDefinitionNode) {
     const { render, ...rest } = renderer;
     return (
       <FieldArray
@@ -117,6 +141,8 @@ export class FormBuilder {
         name={name}
         component={render}
         required={required}
+        arrayFields={fields}
+        typeDefinition={typeDefinition}
         {...rest as any}
       />
     );

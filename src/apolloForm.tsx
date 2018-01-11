@@ -18,6 +18,7 @@ import {
   TypeDefinitionNode,
   EnumValueDefinitionNode,
   InputValueDefinitionNode,
+  InputObjectTypeDefinitionNode,
 } from 'graphql';
 
 import { MutationOpts, QueryProps } from 'react-apollo';
@@ -96,7 +97,7 @@ export type ApolloReduxFormOptions = Partial<ConfigProps> & MutationOpts & {
 };
 
 interface TypeDefinitions {
-  [type: string]: TypeDefinitionNode;
+  [type: string]: TypeDefinitionNode | InputValueDefinitionNode | InputObjectTypeDefinitionNode;
 }
 
 interface OperationSignature {
@@ -105,7 +106,7 @@ interface OperationSignature {
   variables: VariableDefinitionNode[];
 }
 
-function buildTypesTable(document?: DocumentNode): TypeDefinitions {
+function buildDefinitionsTable(document?: DocumentNode) {
   const types: TypeDefinitions = {};
 
   if ( document ) {
@@ -114,7 +115,12 @@ function buildTypesTable(document?: DocumentNode): TypeDefinitions {
         x.kind === 'EnumTypeDefinition' ||
         x.kind === 'InputObjectTypeDefinition' ||
         x.kind === 'ScalarTypeDefinition',
-    ).forEach( (type: TypeDefinitionNode): void => { types[ type.name.value ] = type; });
+    ).forEach( (type: TypeDefinitionNode): void => {
+      types[ type.name.value ] = type;
+      if (type.kind === 'InputObjectTypeDefinition' && !type.name.value.includes('WhereInput')) {
+        type.fields.forEach((fieldType: InputValueDefinitionNode): void => {types[fieldType.name.value] = fieldType; });
+      }
+  });
   }
 
   return types;
@@ -163,7 +169,7 @@ function isRenderFunction(x: FormRenderFunction | FormRenderer): x is FormRender
 }
 
 class VisitingContext {
-  private types: TypeDefinitions;
+  private types: TypeDefinitions ;
   private renderers: FormRenderers;
   private customFields: FormRenderers;
   constructor(types: TypeDefinitions, renderers: FormRenderers = {}, customFields = {}) {
@@ -171,7 +177,7 @@ class VisitingContext {
     this.renderers = renderers;
     this.customFields = customFields;
   }
-  resolveType(typeName: string): TypeDefinitionNode | undefined {
+  resolveType(typeName: string): any | undefined {
     return this.types[typeName];
   }
   resolveRenderer(typeName: string): FormRenderer {
@@ -209,11 +215,11 @@ function visitWithContext(context: VisitingContext, path: string[] = []) {
     },
     NamedType(node: NamedTypeNode) {
       const { name: { value: typeName } } = node;
-
+      
       const fullPath = path.concat(fieldName);
       const fullPathStr = fullPath.join('.');
-
-      const type = context.resolveType(typeName);
+      
+      const type = context.resolveType(typeName) && context.resolveType(typeName) || context.resolveType(fieldName);
       const rendererByType = context.resolveRenderer(typeName);
       const rendererByField = context.resolveFieldRenderer(fullPathStr);
 
@@ -221,22 +227,32 @@ function visitWithContext(context: VisitingContext, path: string[] = []) {
       const renderer = rendererByField.render !== undefined ? rendererByField : rendererByType;
 
       if ( isScalar(typeName) ) {
-        return builder.createInputField(renderer, fieldName, typeName, required);
+        const definition = context.resolveType(fieldName) && context.resolveType(fieldName) || type;
+        return builder.createInputField(renderer, fieldName, typeName, required, definition);
       } else {
         if (type) {
           switch ( type.kind ) {
             case 'InputObjectTypeDefinition':
+            
               const nestedContext = context.extend(renderer.renderers, renderer.customFields);
               const children = visit(type.fields, visitWithContext(nestedContext, fullPath));
-              return builder.createFormSection(renderer, fieldName, children, required);
+              const objectRenderer = renderer.render !== undefined ? renderer : context.resolveRenderer('Object');
+              const definition = context.resolveType(fieldName) && context.resolveType(fieldName) || type;
+              // console.log('Section Name - ' + fieldName)
+              // console.log(node)
+              return builder.createFormSection(objectRenderer, fieldName, children, required, definition);
             case 'EnumTypeDefinition':
               const options = type.values.map(
                 ({name: {value}}: EnumValueDefinitionNode) => ({key: value, value}),
               );
-              return builder.createSelectField(renderer, fieldName, typeName, options, required);
+              const enumRenderer = renderer.render !== undefined ? renderer : context.resolveRenderer('Enum');
+              const definition1 = context.resolveType(fieldName) && context.resolveType(fieldName) || type;
+              return builder.createSelectField(enumRenderer, fieldName, typeName, options, required, definition1);
             case 'ScalarTypeDefinition':
+            case 'InputValueDefinition':
               if (renderer.render !== undefined) {
-                return builder.createInputField(renderer, fieldName, typeName, required);
+                
+                return builder.createInputField(renderer, fieldName, typeName, required, type);
               } else {
                 invariant( false,
                   // tslint:disable-line
@@ -269,19 +285,42 @@ function visitWithContext(context: VisitingContext, path: string[] = []) {
         return node.type;
       },
     },
-    ListType(node: ListTypeNode) {
+    ListType(node: any) {
+      console.log(fieldName)
+      console.log(node)
+      let typeName = '';
+      if (node.type.kind === 'NonNullType') {
+        required = true;
+        typeName = node.type.type.name.value;
+      } else {
+        typeName = node.type.name.value;
+      }
       const fullPath = path.concat(fieldName);
       const fullPathStr = fullPath.join('.');
+      const type = context.resolveType(typeName) && context.resolveType(typeName) || context.resolveType(fieldName);
+      const rendererByType = context.resolveRenderer(typeName);
+      const rendererByField = context.resolveFieldRenderer(fullPathStr);
+
+      // if a render for this path exists, take the highest priority
+      const renderer = rendererByField.render !== undefined ? rendererByField : rendererByType;
       const customFieldRenderer = context.resolveFieldRenderer(fullPathStr);
+      // console.log(type)
+      //console.log(type)
       if (customFieldRenderer.render) {
-        return builder.createArrayField(customFieldRenderer, fieldName, node.type, required);
+        return builder.createArrayField(customFieldRenderer, fieldName, undefined, node.type, required);
       } else {
-        invariant( false,
-          // tslint:disable-line
-          `List Type requires a custom field renderer. No renderer found for ${fullPathStr}`,
-        );
+
+        const children = visit(type.fields, visitWithContext(context, fullPath));
+        const definition = context.resolveType(fieldName) && context.resolveType(fieldName) || type;
+        const arrayRenderer = context.resolveRenderer('Array');
+        const arrayField = builder.createArrayField(arrayRenderer, fieldName, children, node.type.type, required, definition);
+        return arrayField;
+        // invariant( false,
+        //   // tslint:disable-line
+        //   `Listttttttt Type requires a custom field renderer. No renderer found for ${fullPathStr}`,
+        // );
       }
-      return BREAK;
+      // return BREAK;
     },
     InputValueDefinition: {
       enter(node: InputValueDefinitionNode) {
@@ -302,11 +341,11 @@ export function buildForm(
 
   const {renderers, customFields, schema, validate, ...rest} = options;
   const { name, variables } = parseOperationSignature(document, 'mutation');
-  const types = buildTypesTable(schema);
+  const types = buildDefinitionsTable(schema);
 
   const context = new VisitingContext(types, renderers, customFields);
   const fields = visit(variables, visitWithContext(context));
-
+ 
   const withForm = reduxForm({
     form: name,
     validate(values, props) {
