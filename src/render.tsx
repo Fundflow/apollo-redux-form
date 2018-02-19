@@ -14,7 +14,7 @@ import {
 
 import { fromCamelToHuman } from './utils';
 
-export type FormRenderFunction =  (props: FieldProps | ArrayFieldProps | FormSectionProps) => JSX.Element;
+export type FormRenderFunction =  React.ComponentType<FieldProps | ArrayFieldProps | FormSectionProps>;
 
 // XXX we should distinguish between FormFieldRender, FormSectionRender and so on
 // because some properties make sense in one case, but not in the other
