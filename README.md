@@ -56,7 +56,8 @@ Some user stories powered by React Storybook.
 
 ```
 $ npm install
-$ yarn run storybook
+$ npm run compile
+$ npm run storybook
 // point your browser to http://localhost:6006/
 ```
 
