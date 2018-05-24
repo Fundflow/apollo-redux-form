@@ -2,19 +2,15 @@ import * as React from 'react';
 
 import { Field, FieldArray, BaseFieldProps, FormSection } from 'redux-form';
 
-import {
-  TypeNode,
-} from 'graphql';
+import { TypeNode } from 'graphql';
 
-import {
-  FieldProps,
-  ArrayFieldProps,
-  FormSectionProps,
-} from './apolloForm';
+import { FieldProps, ArrayFieldProps, FormSectionProps } from './apolloForm';
 
 import { fromCamelToHuman } from './utils';
 
-export type FormRenderFunction =  React.ComponentType<FieldProps | ArrayFieldProps | FormSectionProps>;
+export type FormRenderFunction = React.ComponentType<
+  FieldProps | ArrayFieldProps | FormSectionProps
+>;
 
 // XXX we should distinguish between FormFieldRender, FormSectionRender and so on
 // because some properties make sense in one case, but not in the other
@@ -29,14 +25,23 @@ export interface FormRenderers {
   [key: string]: FormRenderFunction | FormRenderer;
 }
 
-const defaultRenderField = (Component: any, type: string) => (props: FieldProps) => {
-  const { input, label, meta: { touched, error, warning }, ...rest } = props;
+const defaultRenderField = (Component: any, type: string) => (
+  props: FieldProps
+) => {
+  const {
+    input,
+    label,
+    meta: { touched, error, warning },
+    ...rest
+  } = props;
   return (
     <div>
       <label>{label}</label>
       <div>
         <Component type={type} {...input} placeholder={label} {...rest} />
-        {touched && ((error && <span>{error}</span>) || (warning && <span>{warning}</span>))}
+        {touched &&
+          ((error && <span>{error}</span>) ||
+            (warning && <span>{warning}</span>))}
       </div>
     </div>
   );
@@ -44,33 +49,42 @@ const defaultRenderField = (Component: any, type: string) => (props: FieldProps)
 
 const defaultHiddenField = (props: FieldProps) => {
   const { input, meta, ...rest } = props;
-  return (
-    <input type='hidden' {...input} {...rest} />
-  );
+  return <input type="hidden" {...input} {...rest} />;
 };
 
 const defaultRenderSelectField = (props: FieldProps) => {
-  const { input, label, options, meta: { touched, error, warning }, ...rest } = props;
+  const {
+    input,
+    label,
+    options,
+    meta: { touched, error, warning },
+    ...rest
+  } = props;
   return (
     <div>
       <label>{label}</label>
       <div>
-        <select {...input} {...rest} >
-          {options.map( ({key, value}: {key: string; value: string}) =>
-              <option key={key} value={value}>{value}</option> )}
+        <select {...input} {...rest}>
+          {options.map(({ key, value }: { key: string; value: string }) => (
+            <option key={key} value={value}>
+              {value}
+            </option>
+          ))}
         </select>
-        {touched && ((error && <span>{error}</span>) || (warning && <span>{warning}</span>))}
+        {touched &&
+          ((error && <span>{error}</span>) ||
+            (warning && <span>{warning}</span>))}
       </div>
     </div>
   );
 };
 
 const defaultFieldRenderers: FormRenderers = {
-  'String': defaultRenderField('input', 'text'),
-  'Int': defaultRenderField('input', 'number'),
-  'Float': defaultRenderField('input', 'number'),
-  'Boolean': defaultRenderField('input', 'checkbox'),
-  'ID': defaultHiddenField,
+  String: defaultRenderField('input', 'text'),
+  Int: defaultRenderField('input', 'number'),
+  Float: defaultRenderField('input', 'number'),
+  Boolean: defaultRenderField('input', 'checkbox'),
+  ID: defaultHiddenField,
 };
 
 export interface SelectOption {
@@ -79,9 +93,14 @@ export interface SelectOption {
 }
 
 export class FormBuilder {
-  createInputField(renderer: FormRenderer, name: string, type: string, required?: boolean) {
+  createInputField(
+    renderer: FormRenderer,
+    name: string,
+    type: string,
+    required?: boolean
+  ) {
     const { render, ...rest } = renderer;
-    const renderFn = render || defaultFieldRenderers[ type ];
+    const renderFn = render || defaultFieldRenderers[type];
     const hidden = type === 'ID';
     return (
       <Field
@@ -94,22 +113,50 @@ export class FormBuilder {
       />
     );
   }
-  createFormSection(renderer: FormRenderer, name: string, children: JSX.Element[], required?: boolean) {
+  createFormSection(
+    renderer: FormRenderer,
+    name: string,
+    children: JSX.Element[],
+    required?: boolean
+  ) {
     return (
-      <FormSection name={name} key={name} required={required} component={renderer.render}>
-        { children }
+      <FormSection
+        name={name}
+        key={name}
+        required={required}
+        component={renderer.render}
+      >
+        {children}
       </FormSection>
     );
   }
-  createSelectField(renderer: FormRenderer, name: string, type: string, options: SelectOption[], required?: boolean) {
+  createSelectField(
+    renderer: FormRenderer,
+    name: string,
+    type: string,
+    options: SelectOption[],
+    required?: boolean
+  ) {
     const { render, ...rest } = renderer;
     const renderFn = render || defaultRenderSelectField;
     return (
-      <Field key={name} name={name} label={fromCamelToHuman(name)} required={required}
-             component={renderFn} options={options} {...rest as any} />
+      <Field
+        key={name}
+        name={name}
+        label={fromCamelToHuman(name)}
+        required={required}
+        component={renderFn}
+        options={options}
+        {...rest as any}
+      />
     );
   }
-  createArrayField(renderer: FormRenderer, name: string, childType: TypeNode, required?: boolean) {
+  createArrayField(
+    renderer: FormRenderer,
+    name: string,
+    childType: TypeNode,
+    required?: boolean
+  ) {
     const { render, ...rest } = renderer;
     return (
       <FieldArray
