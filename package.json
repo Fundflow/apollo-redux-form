@@ -1,11 +1,15 @@
 {
   "name": "@fundflow/apollo-redux-form",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "description": "redux-form powered by apollo",
   "main": "./lib/src/index.js",
   "typings": "./lib/src/index.d.ts",
   "types": "./lib/src/index.d.ts",
-  "keywords": ["graphql", "apollo", "redux-form"],
+  "keywords": [
+    "graphql",
+    "apollo",
+    "redux-form"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/Fundflow/apollo-redux-form"
@@ -90,6 +94,9 @@
     "react-redux": "^5.0.3"
   },
   "lint-staged": {
-    "*.{js,json,css,md}": ["prettier --write", "git add"]
+    "*.{js,json,css,md}": [
+      "prettier --write",
+      "git add"
+    ]
   }
 }
