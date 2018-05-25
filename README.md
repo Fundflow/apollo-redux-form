@@ -2,6 +2,8 @@
 
 # Apollo ReduxForm
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/Fundflow/apollo-redux-form.svg)](https://greenkeeper.io/)
+
 ReduxForm powered by Apollo and GraphQL
 
 ## Features
