@@ -3,7 +3,7 @@
 const globalAny: any = global;
 var jsdom = require('jsdom'); // tslint:disable-line
 const { JSDOM } = jsdom;
-const { document } = (new JSDOM('')).window;
+const { document } = new JSDOM('').window;
 globalAny.document = document;
 globalAny.window = document.defaultView;
 globalAny.window = document.defaultView;
@@ -14,9 +14,7 @@ import { assert, expect } from 'chai';
 import { mount } from 'enzyme';
 
 import gql from 'graphql-tag';
-import {
-  initForm, buildForm, apolloForm,
-} from '../src/index';
+import { initForm, buildForm, apolloForm } from '../src/index';
 
 import { ApolloProvider, ApolloClient } from 'react-apollo';
 import { mockNetworkInterface } from 'apollo-test-utils';
@@ -26,36 +24,60 @@ import { reducer as formReducer } from 'redux-form';
 import { Provider } from 'react-redux';
 
 describe('initForm', () => {
-
   const query = gql`
     query getPost($id: ID) {
       getPost(id: $id) {
-        id title isDraft views average createdAt
+        id
+        title
+        isDraft
+        views
+        average
+        createdAt
       }
-    }`;
+    }
+  `;
   const variables = { id: '123' };
-  const data = { getPost: {
-    id: '123',
-    title: 'A title',
-    isDraft: true,
-    views: 100,
-    average: 20.50,
-    createdAt: '2011.12.12',
-  } };
+  const data = {
+    getPost: {
+      id: '123',
+      title: 'A title',
+      isDraft: true,
+      views: 100,
+      average: 20.5,
+      createdAt: '2011.12.12',
+    },
+  };
 
   it('initializes redux-form with initial values from query', (done: any) => {
-
-    const networkInterface = mockNetworkInterface({ request: { query, variables }, result: { data } });
+    const networkInterface = mockNetworkInterface({
+      request: { query, variables },
+      result: { data },
+    });
     const client = new ApolloClient({ networkInterface, addTypename: false });
     const withInit = initForm(query, { variables: { id: '123' } });
 
-    const UpdatePostForm = withInit(buildForm(gql`
-      mutation updatePostFormPost($id: ID, $title: String, $isDraft: Boolean, $views: Int, $average: Float) {
-        createPost(id: $id, title: $title, isDraft: $isDraft, views: $views, average: $average) {
-          id
-          updatedAt
+    const UpdatePostForm = withInit(
+      buildForm(gql`
+        mutation updatePostFormPost(
+          $id: ID
+          $title: String
+          $isDraft: Boolean
+          $views: Int
+          $average: Float
+        ) {
+          createPost(
+            id: $id
+            title: $title
+            isDraft: $isDraft
+            views: $views
+            average: $average
+          ) {
+            id
+            updatedAt
+          }
         }
-      }`));
+      `)
+    );
 
     interface StoreInterface {
       form?: {
@@ -72,40 +94,55 @@ describe('initForm', () => {
         apollo: client.reducer() as Reducer<any>,
       }),
       {}, // init state
-      applyMiddleware(client.middleware()),
+      applyMiddleware(client.middleware())
     );
 
     const wrapper = mount(
       <ApolloProvider client={client}>
         <Provider store={store}>
-            <UpdatePostForm />
+          <UpdatePostForm />
         </Provider>
-      </ApolloProvider>,
+      </ApolloProvider>
     );
 
     // XXX how to wait until initial values are loaded?
-    setTimeout( () => {
+    setTimeout(() => {
       const initialValues = store.getState().form!.updatePostFormPost.initial;
-      expect(initialValues).to.deep.equal( data['getPost'] );
+      expect(initialValues).to.deep.equal(data['getPost']);
       done();
     }, 500);
-
-
   });
 
   it('initializes apollo-form with initial values from query', (done: any) => {
-
-    const networkInterface = mockNetworkInterface({ request: { query, variables }, result: { data } });
+    const networkInterface = mockNetworkInterface({
+      request: { query, variables },
+      result: { data },
+    });
     const client = new ApolloClient({ networkInterface, addTypename: false });
     const withInit = initForm(query, { variables: { id: '123' } });
 
-    const UpdatePostForm = withInit(apolloForm(gql`
-      mutation updatePostFormPost($id: ID, $title: String, $isDraft: Boolean, $views: Int, $average: Float) {
-        createPost(id: $id, title: $title, isDraft: $isDraft, views: $views, average: $average) {
-          id
-          updatedAt
+    const UpdatePostForm = withInit(
+      apolloForm(gql`
+        mutation updatePostFormPost(
+          $id: ID
+          $title: String
+          $isDraft: Boolean
+          $views: Int
+          $average: Float
+        ) {
+          createPost(
+            id: $id
+            title: $title
+            isDraft: $isDraft
+            views: $views
+            average: $average
+          ) {
+            id
+            updatedAt
+          }
         }
-      }`));
+      `)
+    );
 
     interface StoreInterface {
       form?: {
@@ -122,21 +159,21 @@ describe('initForm', () => {
         apollo: client.reducer() as Reducer<any>,
       }),
       {}, // init state
-      applyMiddleware(client.middleware()),
+      applyMiddleware(client.middleware())
     );
 
     const wrapper = mount(
       <ApolloProvider client={client}>
         <Provider store={store}>
-            <UpdatePostForm />
+          <UpdatePostForm />
         </Provider>
-      </ApolloProvider>,
+      </ApolloProvider>
     );
 
     // XXX how to wait until initial values are loaded?
-    setTimeout( () => {
+    setTimeout(() => {
       const initialValues = store.getState().form!.updatePostFormPost.initial;
-      expect(initialValues).to.deep.equal( data['getPost'] );
+      expect(initialValues).to.deep.equal(data['getPost']);
       done();
     }, 500);
   });
@@ -154,7 +191,8 @@ describe('initForm', () => {
           id
           createdAt
         }
-      }`;
+      }
+    `;
     const initialValues = {
       title: 'This is a title',
       spurious: true,
@@ -183,13 +221,13 @@ describe('initForm', () => {
         form: formReducer,
         apollo: client.reducer() as Reducer<any>,
       }),
-      applyMiddleware(client.middleware()),
+      applyMiddleware(client.middleware())
     );
     /* eslint-enable */
     const CreatePostForm = apolloForm(createQuery, {
       schema,
       onSubmitSuccess(response: any) {
-        expect(response).to.deep.equal( resultData.createPost );
+        expect(response).to.deep.equal(resultData.createPost);
         done();
       },
     });
@@ -197,12 +235,9 @@ describe('initForm', () => {
     const wrapper = mount(
       <ApolloProvider client={client} store={store}>
         <CreatePostForm initialValues={initialValues} />
-      </ApolloProvider>,
+      </ApolloProvider>
     );
 
     wrapper.find('button').simulate('submit');
-
-
   });
-
 });

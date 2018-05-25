@@ -5,11 +5,7 @@
   "main": "./lib/src/index.js",
   "typings": "./lib/src/index.d.ts",
   "types": "./lib/src/index.d.ts",
-  "keywords": [
-    "graphql",
-    "apollo",
-    "redux-form"
-  ],
+  "keywords": ["graphql", "apollo", "redux-form"],
   "repository": {
     "type": "git",
     "url": "https://github.com/Fundflow/apollo-redux-form"
@@ -24,7 +20,8 @@
     "lint": "tslint 'src/*.ts*' && tslint 'test/*.ts*'",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook",
-    "deploy-storybook": "./scripts/deploy-storybook.sh"
+    "deploy-storybook": "./scripts/deploy-storybook.sh",
+    "precommit": "lint-staged"
   },
   "author": "FundFlow Gmbh",
   "license": "MIT",
@@ -57,11 +54,14 @@
     "enzyme": "^2.9.1",
     "es6-promise": "^4.1.1",
     "graphql-tag": "^2.4.2",
+    "husky": "^0.14.3",
     "jsdom": "^11.1.0",
+    "lint-staged": "^7.1.2",
     "mocha": "^3.5.0",
     "moment": "^2.18.1",
     "node-sass": "^4.5.3",
     "path": "^0.12.7",
+    "prettier": "^1.12.1",
     "react": "^15.6.1",
     "react-addons-test-utils": "^15.6.0",
     "react-apollo": "^1.4.14",
@@ -88,5 +88,8 @@
     "react": "^15.6.1",
     "react-apollo": "^1.4.14",
     "react-redux": "^5.0.3"
+  },
+  "lint-staged": {
+    "*.{js,json,css,md}": ["prettier --write", "git add"]
   }
 }

@@ -2,10 +2,8 @@ import React from 'react';
 
 import defaultRenderers from './defaultRenderers';
 
-import gql from 'graphql-tag'
-import {
-  apolloForm
-} from '../lib/src/index';
+import gql from 'graphql-tag';
+import { apolloForm } from '../lib/src/index';
 
 const schema = gql`
   input UserInput {
@@ -13,19 +11,23 @@ const schema = gql`
     company: CompanyInput
     wage: AmountInput
   }
+
   input CompanyInput {
     legalName: String
     address: AddressInput
   }
+
   input AddressInput {
     street: String
     streetNumber: String
     city: String
   }
+
   input AmountInput {
     value: Float
     currency: Currency
   }
+
   enum Currency {
     EUR
     GBP
@@ -39,35 +41,24 @@ export const query = gql`
       id
       createdAt
     }
-  }`;
+  }
+`;
 const CreateUserForm = apolloForm(query, {
   schema,
   renderers: {
     ...defaultRenderers,
-    CompanyInput: (props) => {
-      return (
-        <div style={{border: '1px solid black'}}>
-          {props.children}
-        </div>
-      );
+    CompanyInput: props => {
+      return <div style={{ border: '1px solid black' }}>{props.children}</div>;
     },
-    AddressInput: (props) => {
-      return (
-        <div style={{border: '1px solid red'}}>
-          {props.children}
-        </div>
-      );
-    }
+    AddressInput: props => {
+      return <div style={{ border: '1px solid red' }}>{props.children}</div>;
+    },
   },
   customFields: {
-    'user.wage': (props) => {
-      return (
-        <div style={{border: '1px solid blue'}}>
-          {props.children}
-        </div>
-      );
-    }
-  }
+    'user.wage': props => {
+      return <div style={{ border: '1px solid blue' }}>{props.children}</div>;
+    },
+  },
 });
 
 export default CreateUserForm;

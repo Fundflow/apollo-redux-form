@@ -21,11 +21,7 @@ import {
 } from 'graphql';
 
 import { MutationOpts, QueryProps } from 'react-apollo';
-import {
-  reduxForm,
-  ConfigProps,
-  SubmissionError,
-} from 'redux-form';
+import { reduxForm, ConfigProps, SubmissionError } from 'redux-form';
 
 import { graphql } from 'react-apollo';
 
@@ -65,7 +61,9 @@ export interface FormSectionProps {
 
 export interface Fields {
   length: number;
-  forEach(callback: (name: string, index: number, fields: Fields) => void): void;
+  forEach(
+    callback: (name: string, index: number, fields: Fields) => void
+  ): void;
   get(index: number): any;
   getAll(): any[];
   insert(index: number, value: any): void;
@@ -88,12 +86,13 @@ export interface ArrayFieldProps {
   [prop: string]: any;
 }
 
-export type ApolloReduxFormOptions = Partial<ConfigProps> & MutationOpts & {
-  customFields?: FormRenderers;
-  renderers?: FormRenderers;
-  schema?: DocumentNode;
-  renderForm?: (fields: any, props: FormProps) => JSX.Element;
-};
+export type ApolloReduxFormOptions = Partial<ConfigProps> &
+  MutationOpts & {
+    customFields?: FormRenderers;
+    renderers?: FormRenderers;
+    schema?: DocumentNode;
+    renderForm?: (fields: any, props: FormProps) => JSX.Element;
+  };
 
 interface TypeDefinitions {
   [type: string]: TypeDefinitionNode;
@@ -108,26 +107,35 @@ interface OperationSignature {
 function buildTypesTable(document?: DocumentNode): TypeDefinitions {
   const types: TypeDefinitions = {};
 
-  if ( document ) {
-    document.definitions.filter(
-      (x: DefinitionNode) =>
-        x.kind === 'EnumTypeDefinition' ||
-        x.kind === 'InputObjectTypeDefinition' ||
-        x.kind === 'ScalarTypeDefinition',
-    ).forEach( (type: TypeDefinitionNode): void => { types[ type.name.value ] = type; });
+  if (document) {
+    document.definitions
+      .filter(
+        (x: DefinitionNode) =>
+          x.kind === 'EnumTypeDefinition' ||
+          x.kind === 'InputObjectTypeDefinition' ||
+          x.kind === 'ScalarTypeDefinition'
+      )
+      .forEach((type: TypeDefinitionNode): void => {
+        types[type.name.value] = type;
+      });
   }
 
   return types;
 }
 
-function parseOperationSignature(document: DocumentNode, operation: OperationTypeNode ): OperationSignature {
+function parseOperationSignature(
+  document: DocumentNode,
+  operation: OperationTypeNode
+): OperationSignature {
   let variables, name;
   const definitions = document.definitions.filter(
-    (x: OperationDefinitionNode) => x.kind === 'OperationDefinition' && x.operation === operation,
+    (x: OperationDefinitionNode) =>
+      x.kind === 'OperationDefinition' && x.operation === operation
   );
-  invariant((definitions.length === 1),
+  invariant(
+    definitions.length === 1,
     // tslint:disable-line
-    `apollo-redux-form expects exactly one operation definition`,
+    `apollo-redux-form expects exactly one operation definition`
   );
   const definition = definitions[0] as OperationDefinitionNode;
   variables = definition.variableDefinitions || [];
@@ -137,17 +145,12 @@ function parseOperationSignature(document: DocumentNode, operation: OperationTyp
 }
 
 const defaultRenderForm = (fields: any, props: FormProps) => {
-  const {
-    handleSubmit,
-    pristine,
-    submitting,
-    invalid,
-  } = props;
+  const { handleSubmit, pristine, submitting, invalid } = props;
   return (
     <form onSubmit={handleSubmit}>
       {fields}
       <div>
-        <button type='submit' disabled={pristine || submitting || invalid}>
+        <button type="submit" disabled={pristine || submitting || invalid}>
           Submit
         </button>
       </div>
@@ -156,9 +159,11 @@ const defaultRenderForm = (fields: any, props: FormProps) => {
 };
 
 export const isScalar = (name: string) =>
-  ['ID', 'String', 'Int', 'Float', 'Boolean'].some( (x: string) => x === name );
+  ['ID', 'String', 'Int', 'Float', 'Boolean'].some((x: string) => x === name);
 
-function isRenderFunction(x: FormRenderFunction | FormRenderer): x is FormRenderFunction {
+function isRenderFunction(
+  x: FormRenderFunction | FormRenderer
+): x is FormRenderFunction {
   return x === undefined || (x as FormRenderer).render === undefined;
 }
 
@@ -166,7 +171,11 @@ class VisitingContext {
   private types: TypeDefinitions;
   private renderers: FormRenderers;
   private customFields: FormRenderers;
-  constructor(types: TypeDefinitions, renderers: FormRenderers = {}, customFields = {}) {
+  constructor(
+    types: TypeDefinitions,
+    renderers: FormRenderers = {},
+    customFields = {}
+  ) {
     this.types = types;
     this.renderers = renderers;
     this.customFields = customFields;
@@ -176,17 +185,17 @@ class VisitingContext {
   }
   resolveRenderer(typeName: string): FormRenderer {
     const render = this.renderers[typeName];
-    return isRenderFunction(render) ? {render} as FormRenderer : render;
+    return isRenderFunction(render) ? ({ render } as FormRenderer) : render;
   }
   resolveFieldRenderer(fieldPath: string): FormRenderer {
     const render = this.customFields[fieldPath];
-    return isRenderFunction(render) ? {render} as FormRenderer : render;
+    return isRenderFunction(render) ? ({ render } as FormRenderer) : render;
   }
   extend(renderers: FormRenderers = {}, customFields: FormRenderers = {}) {
     return new VisitingContext(
       this.types,
       { ...this.renderers, ...renderers },
-      { ...this.customFields, ...customFields },
+      { ...this.customFields, ...customFields }
     );
   }
 }
@@ -199,7 +208,11 @@ function visitWithContext(context: VisitingContext, path: string[] = []) {
   return {
     VariableDefinition: {
       enter(node: VariableDefinitionNode) {
-        const { variable: { name: {value} } } = node;
+        const {
+          variable: {
+            name: { value },
+          },
+        } = node;
         fieldName = value;
       },
       leave(node: VariableDefinitionNode) {
@@ -208,7 +221,9 @@ function visitWithContext(context: VisitingContext, path: string[] = []) {
       },
     },
     NamedType(node: NamedTypeNode) {
-      const { name: { value: typeName } } = node;
+      const {
+        name: { value: typeName },
+      } = node;
 
       const fullPath = path.concat(fieldName);
       const fullPathStr = fullPath.join('.');
@@ -218,42 +233,76 @@ function visitWithContext(context: VisitingContext, path: string[] = []) {
       const rendererByField = context.resolveFieldRenderer(fullPathStr);
 
       // if a render for this path exists, take the highest priority
-      const renderer = rendererByField.render !== undefined ? rendererByField : rendererByType;
+      const renderer =
+        rendererByField.render !== undefined ? rendererByField : rendererByType;
 
-      if ( isScalar(typeName) ) {
-        return builder.createInputField(renderer, fieldName, typeName, required);
+      if (isScalar(typeName)) {
+        return builder.createInputField(
+          renderer,
+          fieldName,
+          typeName,
+          required
+        );
       } else {
         if (type) {
-          switch ( type.kind ) {
+          switch (type.kind) {
             case 'InputObjectTypeDefinition':
-              const nestedContext = context.extend(renderer.renderers, renderer.customFields);
-              const children = visit(type.fields, visitWithContext(nestedContext, fullPath));
-              return builder.createFormSection(renderer, fieldName, children, required);
+              const nestedContext = context.extend(
+                renderer.renderers,
+                renderer.customFields
+              );
+              const children = visit(
+                type.fields,
+                visitWithContext(nestedContext, fullPath)
+              );
+              return builder.createFormSection(
+                renderer,
+                fieldName,
+                children,
+                required
+              );
             case 'EnumTypeDefinition':
               const options = type.values.map(
-                ({name: {value}}: EnumValueDefinitionNode) => ({key: value, value}),
+                ({ name: { value } }: EnumValueDefinitionNode) => ({
+                  key: value,
+                  value,
+                })
               );
-              return builder.createSelectField(renderer, fieldName, typeName, options, required);
+              return builder.createSelectField(
+                renderer,
+                fieldName,
+                typeName,
+                options,
+                required
+              );
             case 'ScalarTypeDefinition':
               if (renderer.render !== undefined) {
-                return builder.createInputField(renderer, fieldName, typeName, required);
+                return builder.createInputField(
+                  renderer,
+                  fieldName,
+                  typeName,
+                  required
+                );
               } else {
-                invariant( false,
+                invariant(
+                  false,
                   // tslint:disable-line
-                  `Type ${typeName} does not have a default renderer, see ${fullPathStr}`,
+                  `Type ${typeName} does not have a default renderer, see ${fullPathStr}`
                 );
               }
               break;
             default:
-              invariant( false,
+              invariant(
+                false,
                 // tslint:disable-line
-                `Type ${type.kind} is not handled yet, see ${fullPathStr}`,
+                `Type ${type.kind} is not handled yet, see ${fullPathStr}`
               );
           }
         } else {
-          invariant( false,
+          invariant(
+            false,
             // tslint:disable-line
-            `Type ${typeName} is unknown for property ${fullPathStr}`,
+            `Type ${typeName} is unknown for property ${fullPathStr}`
           );
         }
       }
@@ -274,18 +323,27 @@ function visitWithContext(context: VisitingContext, path: string[] = []) {
       const fullPathStr = fullPath.join('.');
       const customFieldRenderer = context.resolveFieldRenderer(fullPathStr);
       if (customFieldRenderer.render) {
-        return builder.createArrayField(customFieldRenderer, fieldName, node.type, required);
+        return builder.createArrayField(
+          customFieldRenderer,
+          fieldName,
+          node.type,
+          required
+        );
       } else {
-        invariant( false,
+        invariant(
+          false,
           // tslint:disable-line
-          `List Type requires a custom field renderer. No renderer found for ${fullPathStr}`,
+          `List Type requires a custom field renderer. No renderer found for ${fullPathStr}`
         );
       }
       return BREAK;
     },
     InputValueDefinition: {
       enter(node: InputValueDefinitionNode) {
-        const { name: { value }, type } = node;
+        const {
+          name: { value },
+          type,
+        } = node;
         fieldName = value;
       },
       leave(node: InputValueDefinitionNode) {
@@ -298,9 +356,9 @@ function visitWithContext(context: VisitingContext, path: string[] = []) {
 
 export function buildForm(
   document: DocumentNode,
-  options: ApolloReduxFormOptions = {}): any {
-
-  const {renderers, customFields, schema, validate, ...rest} = options;
+  options: ApolloReduxFormOptions = {}
+): any {
+  const { renderers, customFields, schema, validate, ...rest } = options;
   const { name, variables } = parseOperationSignature(document, 'mutation');
   const types = buildTypesTable(schema);
 
@@ -317,34 +375,38 @@ export function buildForm(
       return errors;
     },
     // XXX we should pick only properties compatible with Partial<ConfigProps>
-    ...rest as Partial<ConfigProps>,
+    ...(rest as Partial<ConfigProps>),
   });
   const renderFn = options.renderForm || defaultRenderForm;
   return withForm(renderFn.bind(undefined, fields));
 }
 
-export type InitFormOptions = (Object | ((props: any) => QueryProps )) & {
+export type InitFormOptions = (Object | ((props: any) => QueryProps)) & {
   mapToForm?: (values: any) => any;
   [key: string]: any;
 };
 
-export const initForm = (document: DocumentNode, options: InitFormOptions): any => graphql<{[key: string]: string}>(document, {
-  options,
-  props: ({ data }) => {
-    if (data) {
-      const {loading, error} = data;
-      const { name } = parseOperationSignature(document, 'query');
-      const result = data[name];
-      const initialValues =
-        options.mapToForm && result ? options.mapToForm(result) : result;
-      return {
-        loading,
-        initialValues,
-      };
-    }
-    return null;
-  },
-});
+export const initForm = (
+  document: DocumentNode,
+  options: InitFormOptions
+): any =>
+  graphql<{ [key: string]: string }>(document, {
+    options,
+    props: ({ data }) => {
+      if (data) {
+        const { loading, error } = data;
+        const { name } = parseOperationSignature(document, 'query');
+        const result = data[name];
+        const initialValues =
+          options.mapToForm && result ? options.mapToForm(result) : result;
+        return {
+          loading,
+          initialValues,
+        };
+      }
+      return null;
+    },
+  });
 
 interface ApolloFormWrapperProps {
   handleSubmit: () => void;
@@ -358,10 +420,13 @@ interface MutationResponse {
 
 export function apolloForm(
   document: DocumentNode,
-  options: ApolloReduxFormOptions = {},
+  options: ApolloReduxFormOptions = {}
 ): React.ComponentClass<any> {
-
-  const removeNotRegistredField = (variables: any, registeredFields: any, path: string[] = []) => {
+  const removeNotRegistredField = (
+    variables: any,
+    registeredFields: any,
+    path: string[] = []
+  ) => {
     const result: any = {};
     for (let key in variables) {
       const value = variables[key];
@@ -395,13 +460,20 @@ export function apolloForm(
       handleSubmit: (variables: any, dispatch: void, props: any) => {
         if (mutate) {
           return mutate({
-            variables: removeNotRegistredField(variables, props.registeredFields),
+            variables: removeNotRegistredField(
+              variables,
+              props.registeredFields
+            ),
             // XXX we should pick only properties compatible with MutationOpts
-            ... options as MutationOpts,
-          }).then( (response: MutationResponse) => {
-            const { name } = parseOperationSignature(document, 'mutation');
-            return response.data[name];
-          }).catch( (error: any) => { throw new SubmissionError(error); } );
+            ...(options as MutationOpts),
+          })
+            .then((response: MutationResponse) => {
+              const { name } = parseOperationSignature(document, 'mutation');
+              return response.data[name];
+            })
+            .catch((error: any) => {
+              throw new SubmissionError(error);
+            });
         }
         throw new Error(`Expected mutation in apolloForm.`);
       },
@@ -412,14 +484,16 @@ export function apolloForm(
 
   class ApolloFormWrapper extends React.Component<ApolloFormWrapperProps, {}> {
     form = null;
-    public getFormInstance = () =>  {
+    public getFormInstance = () => {
       return this.form;
-    }
+    };
     render() {
       const { handleSubmit, ...rest } = this.props;
       return (
         <GraphQLForm
-          ref={ (c: any) => { this.form = c; }}
+          ref={(c: any) => {
+            this.form = c;
+          }}
           onSubmit={handleSubmit}
           {...rest}
         />
@@ -427,7 +501,9 @@ export function apolloForm(
     }
   }
 
-  const wrapper: React.ComponentClass<any> = withData(ApolloFormWrapper as React.ComponentClass);
+  const wrapper: React.ComponentClass<any> = withData(
+    ApolloFormWrapper as React.ComponentClass
+  );
 
   return wrapper;
 }
