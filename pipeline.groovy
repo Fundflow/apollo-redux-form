@@ -26,7 +26,6 @@ node {
                         String newVersion = npm.version()
                         git.push()
                         git.tag("${newVersion}")
-                        sh "npm run deploy"
                     }
                 }
             }
