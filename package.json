@@ -1,6 +1,6 @@
 {
   "name": "@fundflow/apollo-redux-form",
-  "version": "1.1.7",
+  "version": "1.1.8",
   "description": "redux-form powered by apollo",
   "main": "./lib/src/index.js",
   "typings": "./lib/src/index.d.ts",
